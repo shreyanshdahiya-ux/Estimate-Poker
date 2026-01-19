@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>All</fullName>
+    <columns>NAME</columns>
+    <columns>Average_Estimate__c</columns>
+    <columns>Estimated_By__c</columns>
+    <columns>Estimated_Date__c</columns>
+    <columns>External_Story_Id__c</columns>
+    <columns>Final_Estimate__c</columns>
+    <columns>Room__c</columns>
+    <columns>Status__c</columns>
+    <columns>Story_Order__c</columns>
+    <columns>Story_Title__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>All</label>
+</ListView>

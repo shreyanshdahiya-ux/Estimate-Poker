@@ -1,0 +1,50 @@
+<template>
+    <div class="poker-cards-container slds-var-p-around_large">
+        <div class="section-header slds-grid slds-grid_vertical-align-center slds-var-m-bottom_medium">
+            <lightning-icon icon-name="utility:favorite" size="x-small"></lightning-icon>
+            <h3>Select Your Estimate</h3>
+        </div>
+
+        <div class="cards-deck slds-grid slds-wrap slds-grid_align-center slds-var-p-around_small">
+            <template for:each={cards} for:item="card">
+                <div key={card.value} class={card.cardClass} data-value={card.value} title={card.description}
+                    onclick={handleCardClick}>
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <span class="card-value">{card.displayValue}</span>
+                            <span class="card-description">{card.description}</span>
+                        </div>
+                    </div>
+                    <template lwc:if={card.isSelected}>
+                        <div class="selection-indicator">
+                            <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Selected Value Display -->
+        <template lwc:if={value}>
+            <div class="selected-display slds-var-m-top_large">
+                <p>Your selection:</p>
+                <div class="selected-card-preview">
+                    <span class="preview-value">{value}</span>
+                </div>
+                <div class="slds-var-m-top_small">
+                    <lightning-button label="Clear Selection" variant="base" icon-name="utility:close"
+                        onclick={handleClearSelection}>
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Disabled State Message -->
+        <template lwc:if={isDisabled}>
+            <div class="disabled-message">
+                <lightning-icon icon-name="utility:lock" size="small"></lightning-icon>
+                <span>{disabledMessage}</span>
+            </div>
+        </template>
+    </div>
+</template>

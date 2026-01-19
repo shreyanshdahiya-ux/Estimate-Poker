@@ -1,0 +1,45 @@
+<template>
+    <div class="current-story-card">
+        <div class="story-header-section">
+            <span class="story-header-title">
+                <lightning-icon icon-name="utility:task" size="x-small" variant="inverse"></lightning-icon>
+                Current Story
+            </span>
+        </div>
+        <div class="story-content">
+            <div class="story-badges">
+                <span class="story-id-badge">{story.Name}</span>
+                <span class={statusBadgeClass}>{story.Status__c}</span>
+            </div>
+
+            <h2 class="story-title">{story.Story_Title__c}</h2>
+
+            <template lwc:if={hasDescription}>
+                <div class="story-section">
+                    <p class="section-label">Description</p>
+                    <div class="description-content">
+                        <lightning-formatted-rich-text value={story.Story_Description__c}>
+                        </lightning-formatted-rich-text>
+                    </div>
+                </div>
+            </template>
+ 
+            <template lwc:if={hasCriteria}>
+                <div class="story-section">
+                    <p class="section-label">Acceptance Criteria</p>
+                    <div class="criteria-content">
+                        <lightning-formatted-rich-text value={story.Acceptance_Criteria__c}>
+                        </lightning-formatted-rich-text>
+                    </div>
+                </div>
+            </template>
+
+            <template lwc:if={story.External_Story_Id__c}>
+                <div class="external-ref">
+                    <lightning-icon icon-name="utility:link" size="xx-small"></lightning-icon>
+                    External ID: {story.External_Story_Id__c}
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

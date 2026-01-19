@@ -1,0 +1,206 @@
+.poker-cards-container {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+}
+
+.section-header {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0;
+}
+
+/* Cards Deck */
+.cards-deck {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+/* Poker Card */
+.poker-card {
+    width: 90px;
+    height: 120px;
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: all 0.2s ease;
+    transform-style: preserve-3d;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.poker-card:hover:not(.disabled) .card-inner {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.poker-card.selected .card-inner {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+}
+
+.card-front,
+.card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.card-front {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.poker-card:hover:not(.disabled) .card-front {
+    border-color: #6366f1;
+}
+
+.poker-card.selected .card-front {
+    background: #6366f1;
+    border-color: #6366f1;
+}
+
+.poker-card.selected .card-value,
+.poker-card.selected .card-description {
+    color: #ffffff;
+}
+
+/* Special Cards (?, coffee) */
+.poker-card.special .card-front {
+    background: #fffbeb;
+    border-color: #fbd38d;
+}
+
+.poker-card.special:hover:not(.disabled) .card-front {
+    border-color: #f6ad55;
+}
+
+.poker-card.special.selected .card-front {
+    background: #f6ad55;
+    border-color: #f6ad55;
+}
+
+/* Disabled State */
+.poker-card.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.card-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.card-description {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: #718096;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Selection Indicator */
+.selection-indicator {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    background: #48bb78;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(72, 187, 120, 0.4);
+    z-index: 10;
+    border: 2px solid #ffffff;
+}
+
+.selection-indicator lightning-icon {
+    --lwc-colorTextIconDefault: #ffffff;
+}
+
+/* Selected Value Display */
+.selected-display {
+    text-align: center;
+    padding: 1rem;
+    background: #f7fafc;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.selected-card-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.25rem;
+    background: #6366f1;
+    border-radius: 6px;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.preview-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Disabled State Message */
+.disabled-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: #edf2f7;
+    border-radius: 6px;
+    color: #4a5568;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 480px) {
+    .poker-card {
+        width: 70px;
+        height: 100px;
+    }
+    
+    .card-value {
+        font-size: 1.5rem;
+    }
+}

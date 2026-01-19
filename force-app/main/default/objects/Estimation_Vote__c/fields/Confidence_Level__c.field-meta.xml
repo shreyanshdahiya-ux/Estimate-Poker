@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Confidence_Level__c</fullName>
+    <label>Confidence Level</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>low</fullName>
+                <default>false</default>
+                <label>Low - Not sure</label>
+            </value>
+            <value>
+                <fullName>medium</fullName>
+                <default>true</default>
+                <label>Medium - Somewhat confident</label>
+            </value>
+            <value>
+                <fullName>high</fullName>
+                <default>false</default>
+                <label>High - Very confident</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

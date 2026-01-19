@@ -1,0 +1,17 @@
+{
+  "name": "RegistryError",
+  "message": "Missing metadata type definition in registry for id ''.",
+  "exitCode": 1,
+  "actions": [
+    "Did you mean one of the following types? [Bot]",
+    "",
+    "Confirm the metadata type name is correct. Validate against the registry at:\n<https://github.com/forcedotcom/source-deploy-retrieve/blob/main/src/registry/metadataRegistry.json>\n\nIf the type is not listed in the registry, check that it has Metadata API support via the Metadata Coverage Report:\n<https://developer.salesforce.com/docs/metadata-coverage>\n\nIf the type is available via Metadata API but not in the registry\n\n- Open an issue <https://github.com/forcedotcom/cli/issues>\n- Add the type via PR. Instructions: <https://github.com/forcedotcom/source-deploy-retrieve/blob/main/contributing/metadata.md>"
+  ],
+  "context": "DeployMetadata",
+  "stack": "RegistryError: Missing metadata type definition in registry for id ''.\n    at SfCommandError.from (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/sf-plugins-core/lib/SfCommandError.js:48:16)\n    at DeployMetadata.catch (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/sf-plugins-core/lib/sfCommand.js:332:47)\n    at DeployMetadata.catch (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/plugin-deploy-retrieve/lib/commands/project/deploy/start.js:291:27)\n    at DeployMetadata._run (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\command.js:186:29)\n    at async Config.runCommand (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\config\\config.js:456:25)\n    at async run (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\main.js:97:16)\n    at async file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/bin/run.js:15:1",
+  "cause": "undefined",
+  "warnings": [],
+  "code": "RegistryError",
+  "status": 1,
+  "commandName": "DeployMetadata"
+}

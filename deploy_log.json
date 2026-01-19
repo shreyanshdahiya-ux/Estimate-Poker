@@ -1,0 +1,12 @@
+{
+  "name": "SfError",
+  "message": ": File or folder not found",
+  "exitCode": 1,
+  "context": "DeployMetadata",
+  "stack": "SfError: : File or folder not found\n    at SfCommandError.from (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/sf-plugins-core/lib/SfCommandError.js:48:16)\n    at DeployMetadata.catch (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/sf-plugins-core/lib/sfCommand.js:332:47)\n    at DeployMetadata.catch (file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/node_modules/@salesforce/plugin-deploy-retrieve/lib/commands/project/deploy/start.js:291:27)\n    at DeployMetadata._run (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\command.js:186:29)\n    at async Config.runCommand (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\config\\config.js:456:25)\n    at async run (C:\\Users\\hp\\AppData\\Local\\sf\\client\\2.116.6-3daaca5\\node_modules\\@oclif\\core\\lib\\main.js:97:16)\n    at async file:///C:/Users/hp/AppData/Local/sf/client/2.116.6-3daaca5/bin/run.js:15:1",
+  "cause": "undefined",
+  "warnings": [],
+  "code": "SfError",
+  "status": 1,
+  "commandName": "DeployMetadata"
+}

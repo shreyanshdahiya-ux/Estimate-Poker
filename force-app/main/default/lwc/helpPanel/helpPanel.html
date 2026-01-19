@@ -1,0 +1,38 @@
+<template>
+    <section class="help-panel slds-panel slds-size_medium slds-panel_docked slds-panel_docked-right slds-is-open">
+        <div class="slds-panel__header">
+            <h2 class="slds-text-heading_small">Help</h2>
+            <lightning-button-icon icon-name="utility:close" onclick={handleClose} class="slds-panel__close"></lightning-button-icon>
+        </div>
+        <div class="slds-panel__body">
+            <lightning-input type="search" label="Search Help" placeholder="Search..." onchange={handleSearch}></lightning-input>
+            <div class="slds-m-top_medium">
+                <template lwc:if={isLoading}>
+                    <div class="slds-align_absolute-center slds-p-around_large">
+                        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                    </div>
+                </template>
+                <template lwc:if={hasArticles}>
+                    <lightning-accordion allow-multiple-sections-open>
+                        <template for:each={articles} for:item="article">
+                            <lightning-accordion-section key={article.key} name={article.key} label={article.Name}>
+                                <p class="slds-text-body_regular">{article.Content__c}</p>
+                                <template lwc:if={article.Category__c}>
+                                    <p class="slds-m-top_small">
+                                        <span class="slds-badge slds-badge_lightest">{article.Category__c}</span>
+                                    </p>
+                                </template>
+                            </lightning-accordion-section>
+                        </template>
+                    </lightning-accordion>
+                </template>
+                <template lwc:if={noArticles}>
+                    <div class="slds-text-align_center slds-p-around_large slds-text-color_weak">
+                        <lightning-icon icon-name="utility:info" size="small" class="slds-m-bottom_small"></lightning-icon>
+                        <p>No help articles available for this section.</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+</template>

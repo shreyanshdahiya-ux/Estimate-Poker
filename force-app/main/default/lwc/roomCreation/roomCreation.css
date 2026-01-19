@@ -1,0 +1,159 @@
+.step-content {
+    min-height: 300px;
+}
+
+.scale-preview {
+    background-color: var(--lwc-colorBackgroundAlt, #f3f3f3);
+}
+
+.scale-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.scale-value {
+    font-family: monospace;
+}
+
+.team-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.team-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 1rem;
+    border: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    border-radius: 0.25rem;
+}
+
+.team-card:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f2f2);
+}
+
+.team-card.selected {
+    border: 2px solid var(--lwc-colorBrand, #0070d2);
+    background-color: var(--lwc-colorBackgroundHighlight, #f4f6f9);
+}
+
+.selected-icon {
+    color: var(--lwc-colorBrand, #0070d2);
+}
+
+/* Member List Container - NO overflow restrictions */
+.member-list-container {
+    position: relative;
+}
+
+/* Member List - Remove scroll to prevent dropdown clipping */
+.member-list {
+    border: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    border-radius: 0.25rem;
+}
+
+/* Member Item - Clean grid layout */
+.member-item {
+    border-bottom: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    display: grid;
+    grid-template-columns: 32px 40px 1fr 160px;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    align-items: center;
+    background: #fff;
+}
+
+.member-item:last-child {
+    border-bottom: none;
+}
+
+.member-item:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #fafaf9);
+}
+
+.member-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-checkbox lightning-input {
+    --slds-c-checkbox-sizing-border: 2px;
+}
+
+.member-info {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.member-info p {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Role Select - Fixed width for alignment */
+.role-select {
+    width: 160px;
+}
+
+.role-select lightning-combobox {
+    width: 100%;
+}
+
+/* Search Results */
+.search-results {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    border-radius: 0.25rem;
+    background: #fff;
+}
+
+.search-result-item {
+    cursor: pointer;
+    border-bottom: 1px solid var(--lwc-colorBorderSeparator, #e5e5e5);
+    transition: background-color 0.15s ease;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.search-result-item:hover {
+    background-color: var(--lwc-colorBackgroundRowHover, #f3f2f2);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.selected-members-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Responsive - Stack on mobile */
+@media (max-width: 640px) {
+    .member-item {
+        grid-template-columns: 32px 40px 1fr;
+        grid-template-rows: auto auto;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .role-select {
+        grid-column: 2 / -1;
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+}

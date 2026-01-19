@@ -1,0 +1,505 @@
+<template>
+    <div class="reporting-dashboard slds-var-p-around_large">
+        <!-- Header -->
+        <div class="dashboard-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+            <div class="header-content">
+                <h1>
+                    <lightning-icon icon-name="utility:chart" size="medium" class="header-icon"></lightning-icon>
+                    Estimation Reports
+                </h1>
+                <p>View estimation analytics and team performance metrics</p>
+            </div>
+            <lightning-button-icon icon-name="utility:refresh" variant="border-filled" alternative-text="Refresh"
+                title="Refresh" onclick={handleRefresh}>
+            </lightning-button-icon>
+        </div>
+
+        <!-- Loading State -->
+        <template lwc:if={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:if={isReady}>
+            <!-- Summary Cards (Clickable KPIs) -->
+            <div class="summary-cards">
+                <div class="summary-card clickable" data-kpi="totalRooms" onclick={handleKpiClick}>
+                    <div class="card-icon rooms-icon">
+                        <lightning-icon icon-name="utility:company" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-value">{summary.totalRooms}</p>
+                        <p class="card-label">Total Rooms</p>
+                    </div>
+                    <lightning-icon icon-name="utility:chevronright" size="x-small" class="card-arrow"></lightning-icon>
+                </div>
+                <div class="summary-card clickable" data-kpi="activeRooms" onclick={handleKpiClick}>
+                    <div class="card-icon active-icon">
+                        <lightning-icon icon-name="utility:clock" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-value">{summary.activeRooms}</p>
+                        <p class="card-label">Active Rooms</p>
+                    </div>
+                    <lightning-icon icon-name="utility:chevronright" size="x-small" class="card-arrow"></lightning-icon>
+                </div>
+                <div class="summary-card clickable" data-kpi="totalStories" onclick={handleKpiClick}>
+                    <div class="card-icon stories-icon">
+                        <lightning-icon icon-name="utility:list" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-value">{summary.totalStories}</p>
+                        <p class="card-label">Total Stories</p>
+                    </div>
+                    <lightning-icon icon-name="utility:chevronright" size="x-small" class="card-arrow"></lightning-icon>
+                </div>
+                <div class="summary-card clickable" data-kpi="estimatedStories" onclick={handleKpiClick}>
+                    <div class="card-icon estimated-icon">
+                        <lightning-icon icon-name="utility:check" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-value">{summary.estimatedStories}</p>
+                        <p class="card-label">Estimated</p>
+                    </div>
+                    <lightning-icon icon-name="utility:chevronright" size="x-small" class="card-arrow"></lightning-icon>
+                </div>
+                <div class="summary-card clickable" data-kpi="totalVotes" onclick={handleKpiClick}>
+                    <div class="card-icon votes-icon">
+                        <lightning-icon icon-name="utility:like" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div class="card-content">
+                        <p class="card-value">{summary.totalVotes}</p>
+                        <p class="card-label">Total Votes</p>
+                    </div>
+                    <lightning-icon icon-name="utility:chevronright" size="x-small" class="card-arrow"></lightning-icon>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="content-grid">
+                <!-- Room Report Generator -->
+                <div class="report-section">
+                    <div class="section-header slds-var-p-around_medium">
+                        <lightning-icon icon-name="utility:description" size="x-small"></lightning-icon>
+                        <span>Generate Report</span>
+                    </div>
+                    <div class="section-content slds-var-p-around_medium">
+                        <lightning-combobox label="Select Room" placeholder="Choose a room..." options={roomOptions}
+                            value={selectedRoomId} onchange={handleRoomChange}>
+                        </lightning-combobox>
+                        <div class="report-buttons">
+                            <lightning-button label="Generate Report" variant="brand" onclick={handleGenerateReport}
+                                disabled={noRoomSelected}>
+                            </lightning-button>
+                            <lightning-button label="All Rooms Report" variant="neutral" icon-name="utility:matrix"
+                                onclick={handleGenerateAllRoomsReport}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estimate Distribution -->
+                <div class="distribution-section">
+                    <div class="section-header slds-var-p-around_medium">
+                        <lightning-icon icon-name="utility:chart" size="x-small"></lightning-icon>
+                        <span>Estimate Distribution</span>
+                    </div>
+                    <div class="section-content slds-var-p-around_medium">
+                        <template lwc:if={hasDistribution}>
+                            <div class="distribution-chart">
+                                <template for:each={distributionData} for:item="item">
+                                    <div key={item.estimate} class="distribution-bar-container">
+                                        <span class="bar-label">{item.estimate}</span>
+                                        <div class="bar-wrapper">
+                                            <div class="bar" style={item.barStyle}></div>
+                                        </div>
+                                        <span class="bar-count">{item.count}</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="empty-state-small">
+                                <p>No estimation data available</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Velocity Trend -->
+                <div class="velocity-section">
+                    <div class="section-header slds-var-p-around_medium">
+                        <lightning-icon icon-name="utility:trending" size="x-small"></lightning-icon>
+                        <span>Recent Sessions</span>
+                    </div>
+                    <div class="section-content slds-var-p-around_medium">
+                        <template lwc:if={hasVelocityData}>
+                            <div class="velocity-list">
+                                <template for:each={velocityData} for:item="session">
+                                    <div key={session.roomId} class="velocity-item">
+                                        <div class="velocity-info">
+                                            <p class="velocity-name">{session.roomName}</p>
+                                            <p class="velocity-date">{session.formattedDate}</p>
+                                        </div>
+                                        <div class="velocity-stats">
+                                            <span class="velocity-points">{session.totalPoints} pts</span>
+                                            <span class="velocity-stories">{session.storyCount} stories</span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <div class="empty-state-small">
+                                <p>No completed sessions yet</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Report Modal -->
+    <template lwc:if={showReportModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
+                        variant="bare" onclick={handleCloseReport} class="modal-custom-close">
+                    </lightning-button-icon>
+                    <h2 class="slds-modal__title slds-hyphenate">
+                        <lightning-icon icon-name="utility:description" size="small"
+                            class="slds-var-m-right_x-small header-icon"></lightning-icon>
+                        {reportModalTitle}
+                    </h2>
+                </header>
+                <div class="slds-modal__content slds-var-p-around_medium report-modal-content">
+                    <template lwc:if={isGeneratingReport}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text="Generating report" size="medium"></lightning-spinner>
+                            <p class="slds-var-m-top_medium">Generating report...</p>
+                        </div>
+                    </template>
+
+                    <!-- Single Room Report -->
+                    <template lwc:if={hasReportData}>
+                        <!-- Room Info -->
+                        <div class="report-room-info">
+                            <div class="room-detail">
+                                <span class="detail-label">Room Code</span>
+                                <span class="detail-value">{reportData.room.roomCode}</span>
+                            </div>
+                            <div class="room-detail">
+                                <span class="detail-label">Status</span>
+                                <span class={reportStatusClass}>{reportData.room.status}</span>
+                            </div>
+                            <div class="room-detail">
+                                <span class="detail-label">Facilitator</span>
+                                <span class="detail-value">{reportData.room.facilitator}</span>
+                            </div>
+                            <div class="room-detail">
+                                <span class="detail-label">Scale</span>
+                                <span class="detail-value">{reportData.room.estimationScale}</span>
+                            </div>
+                            <template lwc:if={reportData.room.durationMinutes}>
+                                <div class="room-detail">
+                                    <span class="detail-label">Duration</span>
+                                    <span class="detail-value">{formattedDuration}</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Summary Stats -->
+                        <div class="report-summary">
+                            <div class="report-stat">
+                                <p class="stat-number">{reportData.summary.totalStories}</p>
+                                <p class="stat-label">Total Stories</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{reportData.summary.estimatedStories}</p>
+                                <p class="stat-label">Estimated</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{reportData.summary.totalEstimatePoints}</p>
+                                <p class="stat-label">Total Points</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{reportData.summary.averagePointsPerStory}</p>
+                                <p class="stat-label">Avg per Story</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{reportData.summary.totalMembers}</p>
+                                <p class="stat-label">Members</p>
+                            </div>
+                        </div>
+
+                        <!-- Stories Table -->
+                        <div class="report-stories">
+                            <h3 class="subsection-header">Stories</h3>
+                            <div class="stories-table-wrapper">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Title</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Final Estimate</th>
+                                            <th scope="col">Average</th>
+                                            <th scope="col">Votes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={reportData.stories} for:item="story">
+                                            <tr key={story.id}>
+                                                <td>{story.title}</td>
+                                                <td>
+                                                    <span class={story.statusClass}>{story.status}</span>
+                                                </td>
+                                                <td>
+                                                    <template lwc:if={story.finalEstimate}>
+                                                        <span class="estimate-badge">{story.finalEstimate}</span>
+                                                    </template>
+                                                    <template lwc:else>-</template>
+                                                </td>
+                                                <td>{story.averageEstimate}</td>
+                                                <td>{story.voteCount}</td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Member Participation -->
+                        <div class="report-members">
+                            <h3 class="subsection-header">Member Participation</h3>
+                            <div class="members-table-wrapper">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Role</th>
+                                            <th scope="col">Votes Cast</th>
+                                            <th scope="col">Participation</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={reportData.members} for:item="member">
+                                            <tr key={member.name}>
+                                                <td>{member.name}</td>
+                                                <td>{member.role}</td>
+                                                <td>{member.voteCount}</td>
+                                                <td>
+                                                    <div class="participation-bar-container">
+                                                        <div class="participation-bar"
+                                                            style={member.participationStyle}></div>
+                                                        <span
+                                                            class="participation-text">{member.participationRate}%</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Generated timestamp -->
+                        <p class="report-timestamp">
+                            Report generated: {formattedGeneratedAt}
+                        </p>
+                    </template>
+
+                    <!-- All Rooms Report -->
+                    <template lwc:if={hasAllRoomsData}>
+                        <!-- Overall Summary -->
+                        <div class="report-summary">
+                            <div class="report-stat">
+                                <p class="stat-number">{allRoomsData.summary.totalRooms}</p>
+                                <p class="stat-label">Total Rooms</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{allRoomsData.summary.totalStories}</p>
+                                <p class="stat-label">Total Stories</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{allRoomsData.summary.estimatedStories}</p>
+                                <p class="stat-label">Estimated</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{allRoomsData.summary.totalPoints}</p>
+                                <p class="stat-label">Total Points</p>
+                            </div>
+                            <div class="report-stat">
+                                <p class="stat-number">{allRoomsData.summary.avgPointsPerStory}</p>
+                                <p class="stat-label">Avg per Story</p>
+                            </div>
+                        </div>
+
+                        <!-- All Rooms Table -->
+                        <div class="report-stories">
+                            <h3 class="subsection-header">Rooms Summary</h3>
+                            <div class="stories-table-wrapper">
+                                <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Room Name</th>
+                                            <th scope="col">Code</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Stories</th>
+                                            <th scope="col">Estimated</th>
+                                            <th scope="col">Total Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={allRoomsData.rooms} for:item="room">
+                                            <tr key={room.id}>
+                                                <td>{room.name}</td>
+                                                <td>{room.roomCode}</td>
+                                                <td>
+                                                    <span class={room.statusClass}>{room.status}</span>
+                                                </td>
+                                                <td>{room.totalStories}</td>
+                                                <td>{room.estimatedStories}</td>
+                                                <td>
+                                                    <template lwc:if={room.totalPoints}>
+                                                        <span class="estimate-badge">{room.totalPoints}</span>
+                                                    </template>
+                                                    <template lwc:else>-</template>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Generated timestamp -->
+                        <p class="report-timestamp">
+                            Report generated: {formattedGeneratedAt}
+                        </p>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" onclick={handleCloseReport}></lightning-button>
+                    <lightning-button label="Export CSV" variant="brand" icon-name="utility:download"
+                        onclick={handleExportCSV} disabled={isExportDisabled} class="slds-var-m-left_small">
+                    </lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- KPI Details Modal -->
+    <template lwc:if={showKpiModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
+                        variant="bare" onclick={handleCloseKpiModal} class="modal-custom-close">
+                    </lightning-button-icon>
+                    <h2 class="slds-modal__title slds-hyphenate">{kpiModalTitle}</h2>
+                </header>
+                <div class="slds-modal__content slds-var-p-around_medium">
+                    <template lwc:if={isLoadingKpiDetails}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <template lwc:if={hasKpiDetails}>
+                        <!-- Rooms List -->
+                        <template lwc:if={showRoomsList}>
+                            <div class="kpi-list">
+                                <template for:each={kpiDetails} for:item="room">
+                                    <div key={room.id} class="kpi-list-item" data-room-id={room.id}
+                                        onclick={handleRoomSelect}>
+                                        <div class="kpi-item-icon">
+                                            <lightning-icon icon-name="utility:company" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="kpi-item-content">
+                                            <p class="kpi-item-title">{room.name}</p>
+                                            <p class="kpi-item-subtitle">{room.roomCode}</p>
+                                        </div>
+                                        <span class={room.statusClass}>{room.status}</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Stories List -->
+                        <template lwc:if={showStoriesList}>
+                            <div class="kpi-list">
+                                <template for:each={kpiDetails} for:item="story">
+                                    <div key={story.id} class="kpi-list-item">
+                                        <div class="kpi-item-icon">
+                                            <lightning-icon icon-name="utility:task" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="kpi-item-content">
+                                            <p class="kpi-item-title">{story.title}</p>
+                                            <p class="kpi-item-subtitle">{story.roomName}</p>
+                                        </div>
+                                        <template lwc:if={story.finalEstimate}>
+                                            <span class="estimate-badge">{story.finalEstimate}</span>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class={story.statusClass}>{story.status}</span>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Votes Summary -->
+                        <template lwc:if={showVotesSummary}>
+                            <div class="votes-summary">
+                                <div class="votes-stat-grid">
+                                    <div class="votes-stat-card">
+                                        <p class="votes-stat-value">{kpiDetails.totalVotes}</p>
+                                        <p class="votes-stat-label">Total Votes Cast</p>
+                                    </div>
+                                    <div class="votes-stat-card">
+                                        <p class="votes-stat-value">{kpiDetails.uniqueStories}</p>
+                                        <p class="votes-stat-label">Stories Voted On</p>
+                                    </div>
+                                    <div class="votes-stat-card">
+                                        <p class="votes-stat-value">{kpiDetails.avgVotesPerStory}</p>
+                                        <p class="votes-stat-label">Avg Votes per Story</p>
+                                    </div>
+                                </div>
+                                <template lwc:if={kpiDetails.recentVotes}>
+                                    <h3 class="kpi-subsection-title">Recent Activity</h3>
+                                    <div class="kpi-list">
+                                        <template for:each={kpiDetails.recentVotes} for:item="vote">
+                                            <div key={vote.id} class="kpi-list-item">
+                                                <div class="kpi-item-content">
+                                                    <p class="kpi-item-title">{vote.storyTitle}</p>
+                                                    <p class="kpi-item-subtitle">{vote.roomName}</p>
+                                                </div>
+                                                <span class="vote-value">{vote.value}</span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template lwc:if={noKpiDetails}>
+                        <div class="empty-state-small">
+                            <lightning-icon icon-name="utility:info" size="large"
+                                class="slds-var-m-bottom_medium"></lightning-icon>
+                            <p>No data available</p>
+                        </div>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Close" onclick={handleCloseKpiModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

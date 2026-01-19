@@ -1,0 +1,210 @@
+<template>
+    <lightning-card title="Create New Room" icon-name="utility:add">
+        <div class="slds-var-p-around_medium">
+            <!-- Step Indicator -->
+            <lightning-progress-indicator current-step={currentStep} type="base" variant="base"
+                class="slds-var-m-bottom_large">
+                <lightning-progress-step label="Room Details" value="1"></lightning-progress-step>
+                <lightning-progress-step label="Select Team" value="2"></lightning-progress-step>
+                <lightning-progress-step label="Add Members" value="3"></lightning-progress-step>
+            </lightning-progress-indicator>
+
+            <!-- Step 1: Room Details -->
+            <template lwc:if={isStep1}>
+                <div class="step-content">
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Room Details</h2>
+
+                    <lightning-input label="Room Name" value={roomData.name} onchange={handleInputChange}
+                        data-field="name" required placeholder="e.g., Sprint 24 Planning" class="slds-var-m-bottom_medium">
+                    </lightning-input>
+
+                    <lightning-textarea label="Description" value={roomData.description} onchange={handleInputChange}
+                        data-field="description" placeholder="Brief description of this estimation session"
+                        class="slds-var-m-bottom_medium">
+                    </lightning-textarea>
+
+                    <lightning-combobox label="Estimation Scale" value={roomData.estimationScale} options={scaleOptions}
+                        onchange={handleScaleChange} class="slds-var-m-bottom_medium">
+                    </lightning-combobox>
+
+                    <!-- Scale Preview -->
+                    <div class="scale-preview slds-box slds-box_x-small slds-var-m-bottom_medium">
+                        <p class="slds-text-body_small slds-text-color_weak slds-var-m-bottom_x-small">Scale Preview:</p>
+                        <div class="scale-values">
+                            <template for:each={scalePreview} for:item="item">
+                                <span key={item.id}
+                                    class="scale-value slds-badge slds-var-m-right_xx-small">{item.value}</span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Custom Scale (if selected) -->
+                    <template lwc:if={isCustomScale}>
+                        <lightning-input label="Custom Scale Values" value={roomData.customScaleValues}
+                            onchange={handleInputChange} data-field="customScaleValues" placeholder="1,2,3,5,8,13,?"
+                            help-text="Enter comma-separated values" class="slds-var-m-bottom_medium">
+                        </lightning-input>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Step 2: Select Team -->
+            <template lwc:if={isStep2}>
+                <div class="step-content">
+                    <h2 class="slds-text-heading_medium slds-var-m-bottom_medium">Select Team (Optional)</h2>
+                    <p class="slds-text-body_regular slds-var-m-bottom_medium">
+                        Select an existing team to quickly add members, or skip to manually add members.
+                    </p>
+
+                    <template lwc:if={loadingTeams}>
+                        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                    </template>
+
+                    <template lwc:if={hasTeams}>
+                        <div class="team-grid">
+                            <template for:each={teams} for:item="team">
+                                <div key={team.id} class={team.cardClass} data-team-id={team.id}
+                                    onclick={handleTeamSelect}>
+                                    <div class="slds-grid slds-grid_vertical-align-center">
+                                        <lightning-icon icon-name="standard:groups" size="small"
+                                            class="slds-var-m-right_small"></lightning-icon>
+                                        <div class="slds-grow">
+                                            <h3 class="slds-text-heading_small">{team.name}</h3>
+                                            <p class="slds-text-body_small slds-text-color_weak">
+                                                {team.memberCountDisplay}
+                                            </p>
+                                        </div>
+                                        <template lwc:if={team.isSelected}>
+                                            <lightning-icon icon-name="utility:check" size="small"
+                                                class="slds-col_bump-left selected-icon"></lightning-icon>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template lwc:if={noTeams}>
+                        <div class="slds-box slds-theme_shade slds-text-align_center">
+                            <p>No teams found. You can skip this step and manually add members.</p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Step 3: Add Members -->
+            <template lwc:if={isStep3}>
+                <div class="step-content">
+                    <h2 class="slds-text-heading_medium slds-var-m-bottom_medium">Select Members</h2>
+
+                    <!-- Team Members (if team selected) -->
+                    <template lwc:if={selectedTeamId}>
+                        <div class="slds-var-m-bottom_medium">
+                            <p class="slds-text-body_small slds-var-m-bottom_small">
+                                Select members from <strong>{selectedTeamName}</strong> to add to this room:
+                            </p>
+                            <div class="member-list-container">
+                                <div class="member-list">
+                                    <template for:each={teamMembers} for:item="member">
+                                        <div key={member.id} class="member-item">
+                                            <div class="member-checkbox">
+                                                <lightning-input type="checkbox" checked={member.selected}
+                                                    data-member-id={member.odataUserId} onchange={handleMemberToggle}
+                                                    variant="label-hidden">
+                                                </lightning-input>
+                                            </div>
+
+                                            <lightning-avatar src={member.photoUrl} fallback-icon-name="standard:user"
+                                                size="small">
+                                            </lightning-avatar>
+
+                                            <div class="member-info">
+                                                <p class="slds-text-body_regular slds-truncate">{member.name}</p>
+                                                <p class="slds-text-body_small slds-text-color_weak slds-truncate">
+                                                    {member.role}</p>
+                                            </div>
+
+                                            <div class="role-select">
+                                                <lightning-combobox label="Room Role" value={member.roomRole}
+                                                    options={roomRoleOptions} data-member-id={member.odataUserId}
+                                                    onchange={handleRoleChange} variant="label-hidden"
+                                                    placeholder="Select role">
+                                                </lightning-combobox>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Manual User Search -->
+                    <div class="slds-var-m-top_medium">
+                        <h3 class="slds-text-heading_small slds-var-m-bottom_small">Add Other Users</h3>
+                        <lightning-input type="search" label="Search Users" placeholder="Search by name or email..."
+                            value={userSearchTerm} onchange={handleUserSearch} class="slds-var-m-bottom_small">
+                        </lightning-input>
+
+                        <template lwc:if={searchResults.length}>
+                            <div class="search-results">
+                                <template for:each={searchResults} for:item="user">
+                                    <div key={user.Id} class="search-result-item" onclick={handleAddUser}
+                                        data-user-id={user.Id}>
+                                        <lightning-avatar src={user.SmallPhotoUrl} fallback-icon-name="standard:user"
+                                            size="small">
+                                        </lightning-avatar>
+                                        <div class="slds-grow">
+                                            <p class="slds-text-body_regular">{user.Name}</p>
+                                            <p class="slds-text-body_small slds-text-color_weak">{user.Email}</p>
+                                        </div>
+                                        <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Selected Members Summary -->
+                    <div class="slds-var-m-top_medium">
+                        <h3 class="slds-text-heading_small slds-var-m-bottom_small">
+                            Selected Members ({selectedMemberCount})
+                        </h3>
+                        <div class="selected-members-list">
+                            <template for:each={selectedMembers} for:item="member">
+                                <lightning-pill key={member.odataUserId} label={member.name} name={member.odataUserId}
+                                    onremove={handleRemoveMember}>
+                                    <lightning-avatar src={member.photoUrl} fallback-icon-name="standard:user"
+                                        size="x-small" class="slds-avatar_circle" slot="media">
+                                    </lightning-avatar>
+                                </lightning-pill>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Navigation Buttons -->
+            <div class="slds-var-m-top_large slds-grid">
+                <div class="slds-col">
+                    <lightning-button label="Cancel" onclick={handleCancel}>
+                    </lightning-button>
+                </div>
+                <div class="slds-col_bump-left">
+                    <template lwc:if={showBackButton}>
+                        <lightning-button label="Back" onclick={handleBack} class="slds-var-m-right_small">
+                        </lightning-button>
+                    </template>
+                    <template lwc:if={showNextButton}>
+                        <lightning-button label="Next" variant="brand" onclick={handleNext} disabled={cannotProceed}>
+                        </lightning-button>
+                    </template>
+                    <template lwc:if={showCreateButton}>
+                        <lightning-button label="Create Room" variant="brand" onclick={handleCreateRoom}
+                            disabled={isCreating}>
+                        </lightning-button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Role_In_Room__c</fullName>
+    <description>Role of the member in the room</description>
+    <label>Role In Room</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Facilitator</fullName>
+                <default>false</default>
+                <label>Facilitator</label>
+            </value>
+            <value>
+                <fullName>Voter</fullName>
+                <default>true</default>
+                <label>Voter</label>
+            </value>
+            <value>
+                <fullName>Observer</fullName>
+                <default>false</default>
+                <label>Observer</label>
+            </value>
+            <value>
+                <fullName>Product Owner</fullName>
+                <default>false</default>
+                <label>Product Owner</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

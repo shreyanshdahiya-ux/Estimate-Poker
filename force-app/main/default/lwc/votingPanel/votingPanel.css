@@ -1,0 +1,318 @@
+/* Main Container - padding handled by slds-p-around_none in HTML */
+
+/* Voting Timer */
+.voting-timer {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    padding: 1.25rem 1.75rem;
+    border-radius: 20px;
+    display: flex; /* Flex required for justify-content: space-between spanning full width */
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.2);
+}
+
+.voting-timer.timer-safe {
+    background: #10B981;
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+}
+
+.voting-timer.timer-warning {
+    background: #B08968;
+    box-shadow: 0 10px 15px -3px rgba(176, 137, 104, 0.2);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.voting-timer.timer-danger {
+    background: #EF4444;
+    box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.2);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.voting-timer.timer-paused {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    box-shadow: 0 4px 16px rgba(100, 116, 139, 0.3);
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+.timer-content {
+    /* display/align-items handled by slds-grid in HTML */
+    gap: 0.75rem;
+}
+
+.timer-display {
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+    font-size: 1.5rem;
+}
+
+.timer-status {
+    /* font-size handled by slds-text-body_small in HTML */
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.625rem;
+    border-radius: 6px;
+}
+
+.timer-controls-inline {
+    /* display/align-items handled by slds-grid in HTML */
+    gap: 0.5rem;
+}
+
+/* Discussion Timer */
+.discussion-timer {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    color: #3F51B5;
+    border: 1px solid rgba(63, 81, 181, 0.2);
+    padding: 0.625rem 1rem;
+    border-radius: 10px;
+    /* display/align-items/justify-content/margin-bottom handled by slds classes in HTML */
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(46, 132, 74, 0.1);
+}
+
+/* Alert Banners */
+.alert-banner {
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    /* display/align-items/margin-bottom handled by slds classes in HTML */
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.clarification-alert {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
+}
+
+.break-alert {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+/* Consensus/Disagreement Banners */
+.consensus-banner {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    /* display/align-items/margin-bottom handled by slds classes in HTML */
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid #10b981;
+}
+
+.disagreement-banner {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    /* display/align-items/margin-bottom handled by slds classes in HTML */
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #fbbf24;
+}
+
+/* Timer Controls */
+.timer-controls {
+    /* margin-top/padding-top handled by slds classes in HTML */
+    border-top: 1px solid #f1f5f9;
+}
+
+.timer-label {
+    /* font-size/margin-bottom handled by slds classes in HTML */
+    font-weight: 900;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Timer buttons - display handled by slds-grid in HTML */
+
+/* Vote Options - margin-bottom handled by slds-m-bottom_small in HTML */
+
+/* Comment Section */
+.comment-section {
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 12px;
+    /* text-align/margin-bottom handled by slds classes in HTML */
+    border: 1px solid #e2e8f0;
+}
+
+/* Voting Progress Section */
+.voting-progress {
+    background: white;
+    border-radius: 20px;
+    /* padding/margin-bottom handled by slds-p-around_large slds-m-bottom_large in HTML */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9;
+}
+
+/* Progress header - display/justify-content/align-items/margin-bottom handled by slds classes in HTML */
+
+.progress-header h3 {
+    font-size: 1rem;
+    font-weight: 950;
+    color: #1e293b;
+    margin: 0;
+    /* display/align-items handled by slds-grid in HTML */
+    gap: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.vote-count-badge {
+    background: #3F51B5;
+    color: white;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    box-shadow: 0 4px 10px rgba(63, 81, 181, 0.3);
+}
+
+/* Member Status Grid */
+.member-status {
+    /* display/wrap/margin-top/padding-top handled by slds classes in HTML */
+    gap: 1.25rem; /* Gap for wrap layout */
+    border-top: 1px solid #f1f5f9;
+}
+
+.member-status-item {
+    /* display/direction/align-items handled by slds-grid in HTML */
+    width: 64px;
+}
+
+.member-avatar-wrapper {
+    /* position handled by slds-is-relative in HTML */
+}
+
+.vote-indicator {
+    /* position handled by slds-is-absolute in HTML */
+    bottom: -4px;
+    right: -4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    /* display/align-items/justify-content handled by slds-grid in HTML */
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.vote-indicator.voted {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.vote-indicator.voted lightning-icon {
+    --lwc-colorTextIconDefault: white;
+}
+
+.vote-indicator.voting {
+    background: #3F51B5;
+}
+
+.member-name {
+    /* text-align/margin-top handled by slds classes in HTML */
+    font-size: 0.7rem;
+    font-weight: 700;
+    max-width: 64px;
+    color: #64748b;
+}
+
+/* Submit Button Area */
+/* Submit area - margin-top/text-align handled by slds classes in HTML */
+
+/* Facilitator Controls */
+.facilitator-controls {
+    background: white;
+    border-radius: 20px;
+    /* padding/margin-top handled by slds classes in HTML */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9;
+    border-left: 5px solid #6366f1;
+}
+
+.controls-header {
+    /* display/align-items/margin-bottom handled by slds classes in HTML */
+    gap: 0.75rem;
+}
+
+.controls-header h4 {
+    font-size: 0.85rem;
+    font-weight: 950;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* Control buttons - display handled by slds-grid in HTML */
+
+/* Finalize Section */
+.finalize-section {
+    /* margin-top/padding-top handled by slds classes in HTML */
+    border-top: 1px solid #f1f5f9;
+}
+
+.finalize-header {
+    /* font-size/margin-bottom handled by slds classes in HTML */
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.finalize-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+/* Quick Select */
+/* Quick select - margin-top handled by slds-m-top_medium in HTML */
+
+.quick-select-label {
+    /* margin-bottom handled by slds-m-bottom_x-small in HTML */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+/* Quick select buttons - display handled by slds-grid in HTML */
+
+/* Responsive */
+@media (max-width: 480px) {
+    .member-status {
+        gap: 1rem;
+    }
+
+    .member-status-item {
+        width: 52px;
+    }
+
+    .member-name {
+        font-size: 0.65rem;
+    }
+
+    .finalize-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,184 @@
+<template>
+    <div class="estimation-session">
+        <!-- Real-time event handler for live updates across all users -->
+        <c-realtime-event-handler
+            room-id={roomId}
+            onvotereceived={handleVoteEventFromHandler}
+            onvoteupdated={handleVoteEventFromHandler}
+            onvotedeleted={handleVoteEventFromHandler}
+            onvotesrevealed={handleVotesRevealedFromHandler}
+            onvotesreset={handleVotesResetFromHandler}
+            onestimatefinalized={handleEstimateFinalizedFromHandler}
+            onstorychanged={handleStoryChangedFromHandler}
+            onstoryactivated={handleStoryActivated}
+            onmemberjoined={handleMemberEventFromHandler}
+            onmemberleft={handleMemberEventFromHandler}
+            onstatusupdated={handleRoomEventFromHandler}
+            onsessionstarted={handleRoomEventFromHandler}
+            onsessionended={handleRoomEventFromHandler}
+            onsessionpaused={handleRoomEventFromHandler}
+            onsessionresumed={handleRoomEventFromHandler}
+            ontimerstarted={handleTimerEventFromHandler}
+            ontimerpaused={handleTimerEventFromHandler}
+            ontimerresumed={handleTimerEventFromHandler}
+            ontimerstopped={handleTimerEventFromHandler}
+            onpresencechanged={handlePresenceEventFromHandler}>
+        </c-realtime-event-handler>
+
+        <!-- Header -->
+        <header class="session-header">
+            <div class="header-left">
+                <button class="glass-button secondary" onclick={handleBack} title="Go back to room dashboard">
+                    <lightning-icon icon-name="utility:back" size="xx-small" class="slds-m-right_x-small" alternative-text="Back"></lightning-icon>
+                    Back to Room
+                </button>
+            </div>
+
+            <div class="header-center">
+                <h1 class="session-title">{currentStoryTitle}</h1>
+                <div class="header-metadata">
+                    <span class="room-code-badge" title="Room Code">{roomCode}</span>
+                    <div class="timer-group">
+                        <!-- Total Session Timer -->
+                        <div class="session-timer" title="Total Session Time">
+                            <lightning-icon icon-name="utility:clock" size="xx-small" variant="inverse" alternative-text="Session Clock"></lightning-icon>
+                            <span>{sessionTime}</span>
+                        </div>
+                        <!-- Individual Voting Timer -->
+                        <template if:true={showIndividualTimer}>
+                            <div class="session-timer user-timer pulse-glow" title="My Voting Time">
+                                <lightning-icon icon-name="utility:user" size="xx-small" variant="success" alternative-text="User Timer"></lightning-icon>
+                                <span>{individualTimerDisplay}</span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <template if:true={isFacilitator}>
+                    <button class="glass-button secondary" onclick={handleRefresh} title="Refresh Session">
+                        <lightning-icon icon-name="utility:refresh" size="xx-small" alternative-text="Refresh"></lightning-icon>
+                    </button>
+                    <button class="glass-button warning" onclick={handlePauseSession} title="Pause current session">
+                        <lightning-icon icon-name="utility:pause" size="xx-small" class="slds-m-right_x-small" alternative-text="Pause"></lightning-icon>
+                        Pause
+                    </button>
+                    <button class="glass-button destructive" onclick={handleEndSession} title="End current session">
+                        <lightning-icon icon-name="utility:close" size="xx-small" class="slds-m-right_x-small" alternative-text="End"></lightning-icon>
+                        End
+                    </button>
+                </template>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <template lwc:if={isLoading}>
+            <div class="loading-container">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Main Content -->
+        <template lwc:if={isReady}>
+            <div class="session-content">
+                <!-- Story Queue (Left Panel) -->
+                <div class="side-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">
+                            <lightning-icon icon-name="utility:list" size="x-small" variant="inverse"></lightning-icon>
+                            Story Queue
+                        </span>
+                    </div>
+                    <div class="story-queue">
+                        <template for:each={stories} for:item="story">
+                            <div key={story.Id} class={story.itemClass} data-story-id={story.Id}
+                                draggable={isFacilitator} ondragstart={handleDragStart} ondragend={handleDragEnd}
+                                ondragover={handleDragOver} ondragleave={handleDragLeave} ondrop={handleDrop}
+                                onclick={handleStoryClick}>
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <span class={story.statusBadge}>{story.Status__c}</span>
+                                    <template lwc:if={story.Final_Estimate__c}>
+                                        <span
+                                            class="estimate-badge slds-m-left_xx-small">{story.Final_Estimate__c}</span>
+                                    </template>
+                                </div>
+                                <p class="story-title slds-truncate">{story.Story_Title__c}</p>
+                            </div>
+                        </template>
+
+                        <template lwc:if={noStories}>
+                            <div class="empty-state">
+                                <lightning-icon icon-name="utility:info" size="small"
+                                    class="slds-m-bottom_small"></lightning-icon>
+                                <p>No stories added yet</p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Current Story & Voting (Center Panel) -->
+                <div class="center-panel">
+                    <!-- Current Story -->
+                    <template lwc:if={currentStory}>
+                        <c-current-story story={currentStory}></c-current-story>
+
+                        <!-- Voting Panel -->
+                        <c-voting-panel story-id={currentStory.Id} room-member-id={currentUserMemberId}
+                            scale-values={scaleValues} is-facilitator={isFacilitator} can-vote={canVote}
+                            room-id={roomId} voting-start-time={currentStory.Voting_Start_Time__c}
+                            onestimatefinalized={handleEstimateFinalized}
+                            ontimerupdate={handleMyTimerUpdate}>
+                        </c-voting-panel>
+                    </template>
+
+                    <!-- No Story Selected -->
+                    <template lwc:if={noCurrentStory}>
+                        <div class="no-story">
+                            <div class="no-story-icon">
+                                <lightning-icon icon-name="utility:chevronright" size="large"></lightning-icon>
+                            </div>
+                            <h2>Select a Story</h2>
+                            <p>Click on a story from the queue to start estimating</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Members Panel (Right Panel) -->
+                <div class="side-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">
+                            <lightning-icon icon-name="utility:groups" size="x-small"
+                                variant="inverse"></lightning-icon>
+                            Participants
+                        </span>
+                    </div>
+                    <div class="members-list">
+                        <template for:each={members} for:item="member">
+                            <div key={member.Id} class="member-item">
+                                <div class="member-avatar-wrapper">
+                                    <lightning-avatar src={member.photoUrl} fallback-icon-name="standard:user"
+                                        size="medium">
+                                    </lightning-avatar>
+                                    <!-- <div class={member.onlineIndicator}></div> -->
+                                </div>
+                                <div class="member-details">
+                                    <p class="member-name">{member.userName}</p>
+                                    <p class="member-role">{member.Role_In_Room__c}</p>
+                                </div>
+                                <div class="member-status">
+                                    <template lwc:if={member.Can_Vote__c}>
+                                        <button class="vote-badge like-button" title="Send Like" 
+                                                data-user-id={member.User__c} onclick={handleLikeMember}>
+                                            <lightning-icon icon-name="utility:like" size="xx-small" alternative-text="Like"></lightning-icon>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

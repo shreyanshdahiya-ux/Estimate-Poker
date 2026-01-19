@@ -1,0 +1,85 @@
+<template>
+    <!-- Real-time Event Handler (Always active for global/list updates) -->
+    <c-realtime-event-handler room-id={selectedRoomId} show-debug="true" onvotereceived={handleVoteEvent}
+        onvoteupdated={handleVoteEvent} onvotedeleted={handleVoteEvent} onvotesrevealed={handleVoteEvent}
+        onvotesreset={handleVoteEvent} onestimatefinalized={handleVoteEvent} onmemberjoined={handleMemberEvent}
+        onmemberleft={handleMemberEvent} onstorychanged={handleStoryEvent} onstorycreated={handleStoryEvent}
+        onstoryupdated={handleStoryEvent} onstorydeleted={handleStoryEvent} onstoryactivated={handleStoryEvent}
+        onstoryestimated={handleStoryEvent} onstoryskipped={handleStoryEvent} onstoriesreordered={handleStoryEvent}
+        onstatusupdated={handleRoomEvent} onsessionstarted={handleRoomEvent} onsessionended={handleRoomEvent}
+        onsessionpaused={handleRoomEvent} onsessionresumed={handleRoomEvent} onpresencechanged={handlePresenceEvent}>
+    </c-realtime-event-handler>
+
+    <div class="planning-poker-app">
+        <!-- Header - Hidden during estimation session to avoid double headers -->
+        <template lwc:if={showHeader}>
+            <div class="app-header slds-box slds-box_x-small slds-theme_default">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-col">
+                        <h1 class="slds-text-heading_large slds-media_center">
+                            <lightning-icon icon-name="custom:custom63" size="medium"
+                                class="slds-var-m-right_small"></lightning-icon>
+                            Planning Poker
+                        </h1>
+                    </div>
+                    <div class="slds-col_bump-left">
+                        <lightning-button-group>
+                            <lightning-button label="My Rooms" onclick={handleNavigate} data-view="roomList"
+                                variant={roomListVariant}>
+                            </lightning-button>
+                            <lightning-button label="Teams" onclick={handleNavigate} data-view="teams"
+                                variant={teamsVariant}>
+                            </lightning-button>
+
+                        </lightning-button-group>
+                        <lightning-button-icon icon-name="utility:question" alternative-text="Help" variant="border-inverse"
+                            class="slds-var-m-left_medium" title="Help" onclick={toggleHelp}>
+                        </lightning-button-icon>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Main Content -->
+        <div class={contentClass}>
+            <!-- Room List View -->
+            <template lwc:if={isRoomListView}>
+                <c-room-list onroomselect={handleRoomSelect} oncreateroom={handleCreateRoom}>
+                </c-room-list>
+            </template>
+
+            <!-- Room Creation View -->
+            <template lwc:if={isRoomCreationView}>
+                <c-room-creation onroomcreated={handleRoomCreated} oncancel={handleCancelCreate}>
+                </c-room-creation>
+            </template>
+
+            <!-- Room Dashboard View -->
+            <template lwc:if={isRoomDashboardView}>
+                <c-room-dashboard room-id={selectedRoomId} onback={handleBackToList}
+                    onstartsession={handleStartSession}>
+                </c-room-dashboard>
+            </template>
+
+            <!-- Estimation Session View -->
+            <template lwc:if={isEstimationSessionView}>
+                <c-estimation-session room-id={selectedRoomId} onback={handleBackToRoom}
+                    onsessionend={handleSessionEnd}>
+                </c-estimation-session>
+            </template>
+
+            <!-- Teams View -->
+            <template lwc:if={isTeamsView}>
+                <c-team-management></c-team-management>
+            </template>
+
+
+        </div>
+
+        <!-- Help Panel -->
+        <template lwc:if={showHelp}>
+            <c-help-panel context={currentView} onclose={toggleHelp}>
+            </c-help-panel>
+        </template>
+    </div>
+</template>

@@ -1,0 +1,230 @@
+<template>
+    <div class="voting-panel slds-p-around_none">
+        <!-- Voting Timer (countdown) -->
+        <template lwc:if={showVotingTimer}>
+            <div class={votingTimerClass}>
+                <div class="timer-content slds-grid slds-grid_vertical-align-center">
+                    <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                    <span class="timer-display">{votingTimerDisplay}</span>
+                    <span class="timer-status slds-text-body_small">{timerStatusText}</span>
+                </div>
+                <template lwc:if={isFacilitator}>
+                    <div class="timer-controls-inline slds-grid slds-grid_vertical-align-center">
+                        <template lwc:if={showPauseButton}>
+                            <lightning-button-icon icon-name="utility:pause" variant="bare" size="small"
+                                alternative-text="Pause timer" title="Pause timer" onclick={handlePauseTimer}>
+                            </lightning-button-icon>
+                        </template>
+                        <template lwc:if={showResumeButton}>
+                            <lightning-button-icon icon-name="utility:play" variant="bare" size="small"
+                                alternative-text="Resume timer" title="Resume timer" onclick={handleResumeTimer}>
+                            </lightning-button-icon>
+                        </template>
+                        <lightning-button-icon icon-name="utility:close" variant="bare" size="small"
+                            alternative-text="Stop timer" title="Stop timer" onclick={handleStopVotingTimer}>
+                        </lightning-button-icon>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Discussion Timer (after reveal) -->
+        <template lwc:if={votesRevealed}>
+            <div class="discussion-timer slds-grid slds-grid_vertical-align-center slds-grid_align-center slds-m-bottom_medium">
+                <lightning-icon icon-name="utility:comments" size="small"></lightning-icon>
+                <span>Discussion Time: {discussionTime}</span>
+            </div>
+        </template>
+
+        <!-- Special Cards Alerts -->
+        <template lwc:if={showClarificationAlert}>
+            <div class="alert-banner clarification-alert slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                <lightning-icon icon-name="utility:help" size="small"></lightning-icon>
+                <span>{clarificationMessage}</span>
+            </div>
+        </template>
+        <template lwc:if={showBreakAlert}>
+            <div class="alert-banner break-alert slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                <lightning-icon icon-name="utility:pause" size="small"></lightning-icon>
+                <span>{breakMessage}</span>
+            </div>
+        </template>
+
+        <!-- Consensus/Disagreement Indicator -->
+        <template lwc:if={votesRevealed}>
+            <template lwc:if={hasConsensus}>
+                <div class="consensus-banner slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                    <lightning-icon icon-name="utility:success" size="small"></lightning-icon>
+                    <span>Consensus reached: {consensusValue}</span>
+                </div>
+            </template>
+            <template lwc:if={hasDisagreement}>
+                <div class="disagreement-banner slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
+                    <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                    <span>{disagreementMessage} - Discussion recommended</span>
+                </div>
+            </template>
+        </template>
+
+        <!-- Voting Progress -->
+        <div class="voting-progress slds-p-around_large slds-m-bottom_large">
+            <div class="progress-header slds-grid slds-grid_align-spread slds-grid_vertical-align-center slds-m-bottom_medium">
+                <h3 class="slds-grid slds-grid_vertical-align-center">
+                    <lightning-icon icon-name="utility:groups" size="x-small"></lightning-icon>
+                    Voting Progress
+                </h3>
+                <span class="vote-count-badge">
+                    {voteCount} / {totalMembers} voted
+                </span>
+            </div>
+            
+            <lightning-progress-bar value={voteProgress} size="medium">
+            </lightning-progress-bar>
+
+            <!-- Member Voting Status -->
+            <div class="member-status slds-grid slds-wrap slds-m-top_medium slds-p-top_medium">
+                <template for:each={memberVotingStatus} for:item="member">
+                    <div key={member.odataUserId} class="member-status-item slds-grid slds-grid_vertical slds-grid_vertical-align-center" title={member.voterName}>
+                        <div class="member-avatar-wrapper slds-is-relative">
+                            <lightning-avatar src={member.voterPhoto} fallback-icon-name="standard:user" size="small">
+                            </lightning-avatar>
+                            <template lwc:if={member.hasVoted}>
+                                <span class="vote-indicator voted slds-is-absolute slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+                                    <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                                </span>
+                            </template>
+                            <template lwc:if={member.isVoting}>
+                                <span class="vote-indicator voting slds-is-absolute slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+                                    <lightning-spinner size="xx-small" alternative-text="Voting"></lightning-spinner>
+                                </span>
+                            </template>
+                        </div>
+                        <span class="member-name slds-truncate slds-text-align_center slds-m-top_xx-small">{member.voterName}</span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Poker Cards -->
+        <c-poker-cards scale-values={scaleValues} disabled={cardsDisabled} disabled-message={cardsDisabledMessage}
+            revealed={votesRevealed} value={selectedCardValue} oncardselect={handleCardSelect}>
+        </c-poker-cards>
+
+        <!-- Submit Vote Button -->
+        <template lwc:if={canSubmitVote}>
+            <div class="submit-area slds-text-align_center slds-m-top_large">
+                <!-- Vote Comment Toggle -->
+                <div class="vote-options slds-m-bottom_small">
+                    <lightning-button-icon icon-name="utility:comments" variant={commentButtonVariant} size="medium"
+                        alternative-text="Add comment" title="Add a comment to your vote" onclick={handleToggleComment}>
+                    </lightning-button-icon>
+                </div>
+
+                <!-- Vote Comment Input -->
+                <template lwc:if={showCommentInput}>
+                    <div class="comment-section slds-text-align_left slds-m-bottom_medium">
+                        <lightning-textarea label="Vote Comment (optional)" placeholder="Explain your estimate..."
+                            value={voteComment} onchange={handleCommentChange} max-length="500">
+                        </lightning-textarea>
+                        <lightning-combobox label="Confidence Level" value={confidenceLevel} options={confidenceOptions}
+                            onchange={handleConfidenceChange} class="slds-m-top_x-small">
+                        </lightning-combobox>
+                    </div>
+                </template>
+
+                <lightning-button label={submitButtonLabel} variant="brand" onclick={handleSubmitVote}
+                    disabled={noCardSelected}>
+                </lightning-button>
+            </div>
+        </template>
+
+        <template lwc:if={votesRevealed}>
+            <c-vote-results votes={revealedVotes} statistics={voteStatistics} scale-values={scaleValues}
+                story-total-time={storyTotalTime}>
+            </c-vote-results>
+        </template>
+
+        <!-- Facilitator Controls -->
+        <template lwc:if={isFacilitator}>
+            <div class="facilitator-controls slds-p-around_large slds-m-top_large">
+                <div class="controls-header slds-grid slds-grid_vertical-align-center slds-m-bottom_medium">
+                    <lightning-icon icon-name="utility:settings" size="x-small"></lightning-icon>
+                    <h4>Facilitator Controls</h4>
+                </div>
+
+                <div class="control-buttons slds-grid slds-wrap">
+                    <!-- Skip Story Button -->
+                    <lightning-button label="Skip Story" variant="neutral" icon-name="utility:forward"
+                        onclick={handleSkipStory} class="slds-m-right_x-small slds-m-bottom_x-small">
+                    </lightning-button>
+
+                    <template lwc:if={canRevealVotes}>
+                        <lightning-button label="Reveal Votes" variant="brand" icon-name="utility:preview"
+                            onclick={handleRevealVotes} disabled={hasNoVotes} class="slds-m-right_x-small slds-m-bottom_x-small">
+                        </lightning-button>
+                    </template>
+
+                    <template lwc:if={votesRevealed}>
+                        <lightning-button label="Re-vote" variant="neutral" icon-name="utility:refresh"
+                            onclick={handleResetVotes} class="slds-m-right_x-small slds-m-bottom_x-small">
+                        </lightning-button>
+                    </template>
+                </div>
+
+                <!-- Voting Timer Controls -->
+                <template lwc:if={canStartVotingTimer}>
+                    <div class="timer-controls slds-m-top_medium slds-p-top_medium">
+                        <p class="timer-label slds-text-body_small slds-m-bottom_x-small">Start Voting Timer:</p>
+                        <div class="timer-buttons slds-grid slds-wrap">
+                            <lightning-button label="30s" variant="neutral" data-seconds="30"
+                                onclick={handleStartVotingTimer} class="slds-m-right_x-small slds-m-bottom_x-small">
+                            </lightning-button>
+                            <lightning-button label="1m" variant="neutral" data-seconds="60"
+                                onclick={handleStartVotingTimer} class="slds-m-right_x-small slds-m-bottom_x-small">
+                            </lightning-button>
+                            <lightning-button label="2m" variant="neutral" data-seconds="120"
+                                onclick={handleStartVotingTimer} class="slds-m-right_x-small slds-m-bottom_x-small">
+                            </lightning-button>
+                            <lightning-button label="5m" variant="neutral" data-seconds="300"
+                                onclick={handleStartVotingTimer} class="slds-m-right_x-small slds-m-bottom_x-small">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Finalize Estimate -->
+                <template lwc:if={votesRevealed}>
+                    <div class="finalize-section slds-m-top_medium slds-p-top_medium">
+                        <p class="finalize-header slds-text-body_small slds-m-bottom_small">Finalize Estimate</p>
+
+                        <div class="finalize-grid">
+                            <lightning-combobox label="Final Estimate" value={finalEstimate} options={scaleOptions}
+                                onchange={handleFinalEstimateChange}>
+                            </lightning-combobox>
+                            <lightning-button label="Finalize" variant="success" icon-name="utility:check"
+                                onclick={handleFinalizeEstimate} disabled={noFinalEstimate}>
+                            </lightning-button>
+                        </div>
+
+                        <!-- Quick Select Buttons -->
+                        <div class="quick-select slds-m-top_medium">
+                            <p class="quick-select-label slds-m-bottom_x-small">Quick select:</p>
+                            <div class="quick-select-buttons slds-grid slds-wrap">
+                                <template lwc:if={suggestedEstimate}>
+                                    <lightning-button label={suggestedEstimateLabel} variant="outline-brand"
+                                        onclick={handleSelectSuggested} class="slds-m-right_x-small slds-m-bottom_x-small">
+                                    </lightning-button>
+                                </template>
+                                <template lwc:if={mostCommonVote}>
+                                    <lightning-button label={mostCommonVoteLabel} variant="outline-brand"
+                                        onclick={handleSelectMostCommon} class="slds-m-right_x-small slds-m-bottom_x-small">
+                                    </lightning-button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>
