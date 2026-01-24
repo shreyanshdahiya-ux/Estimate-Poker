@@ -2,7 +2,7 @@
  * @description Test class for RoomController
  */
 @isTest
-private class RoomControllerTest {
+public class RoomControllerTest {
 
     @isTest
     static void testCreateRoom() {

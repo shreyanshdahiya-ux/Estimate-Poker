@@ -2,7 +2,7 @@
  * @description Test class for TeamController
  */
 @isTest
-private class TeamControllerTest {
+public class TeamControllerTest {
 
     @isTest
     static void testCreateTeam() {

@@ -2,7 +2,7 @@
  * @description Test class for VotingController
  */
 @isTest
-private class VotingControllerTest {
+public class VotingControllerTest {
 
     @isTest
     static void testSubmitVote() {

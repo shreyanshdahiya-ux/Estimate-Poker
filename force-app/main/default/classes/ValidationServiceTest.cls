@@ -2,7 +2,7 @@
  * @description Test class for ValidationService
  */
 @isTest
-private class ValidationServiceTest {
+public class ValidationServiceTest {
 
     @isTest
     static void testValidateRoomDataValid() {
@@ -188,9 +188,13 @@ private class ValidationServiceTest {
 
     @isTest
     static void testValidateVoteValid() {
+        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        List<User_Story__c> stories = (List<User_Story__c>) setup.get('stories');
+        Room_Member__c member = (Room_Member__c) setup.get('roomMember');
+
         Map<String, Object> voteData = new Map<String, Object>{
-            'storyId' => 'a00000000000001',
-            'roomMemberId' => 'a00000000000002',
+            'storyId' => stories[0].Id,
+            'roomMemberId' => member.Id,
             'voteValue' => '5'
         };
 
@@ -203,9 +207,12 @@ private class ValidationServiceTest {
 
     @isTest
     static void testValidateVoteMissingStoryId() {
+        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Room_Member__c member = (Room_Member__c) setup.get('roomMember');
+
         Map<String, Object> voteData = new Map<String, Object>{
             'storyId' => '',
-            'roomMemberId' => 'a00000000000002',
+            'roomMemberId' => member.Id,
             'voteValue' => '5'
         };
 

@@ -2,7 +2,7 @@
  * @description Test class for JiraXmlParser
  */
 @isTest
-private class JiraXmlParserTest {
+public class JiraXmlParserTest {
     
     @isTest
     static void testParseValidJiraXml() {

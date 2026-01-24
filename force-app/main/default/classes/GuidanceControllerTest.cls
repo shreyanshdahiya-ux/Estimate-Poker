@@ -2,40 +2,59 @@
  * @description Test class for GuidanceController
  */
 @isTest
-private class GuidanceControllerTest {
+public class GuidanceControllerTest {
 
     @TestSetup
     static void setupTestData() {
-        // Create help articles
-        List<Help_Article__c> articles = new List<Help_Article__c>();
-        articles.add(new Help_Article__c(
-            Name = 'Getting Started',
-            Content__c = 'Welcome to Planning Poker!',
-            Category__c = 'Basics',
-            Context__c = 'roomList',
-            Order__c = 1,
-            Active__c = true
-        ));
-        articles.add(new Help_Article__c(
-            Name = 'How to Vote',
-            Content__c = 'Click on a card to vote.',
-            Category__c = 'Voting',
-            Context__c = 'estimationSession',
-            Order__c = 1,
-            Active__c = true
-        ));
-        articles.add(new Help_Article__c(
-            Name = 'Inactive Article',
-            Content__c = 'This should not appear.',
-            Category__c = 'Hidden',
-            Context__c = 'roomList',
-            Active__c = false
-        ));
-        insert articles;
+        // GuidanceController mock data is static, so we can't set it in TestSetup for all tests easily
+        // because static variables are reset between transactions/test methods.
+        // However, we can create a helper method or set it in each test.
+        // For TestSetup, we will create user progress which is persistent DML.
+    }
+
+    // Helper to setup mock articles
+    static void setupMockArticles() {
+        String jsonString = '[' +
+            '{' +
+                '"attributes": {"type": "Help_Content__mdt"},' +
+                '"MasterLabel": "Getting Started",' +
+                '"DeveloperName": "Getting_Started",' +
+                '"Content__c": "Welcome to Planning Poker!",' +
+                '"Category__c": "Basics",' +
+                '"Context__c": "roomList",' +
+                '"Order__c": 1,' +
+                '"Active__c": true' +
+            '},' +
+            '{' +
+                '"attributes": {"type": "Help_Content__mdt"},' +
+                '"MasterLabel": "How to Vote",' +
+                '"DeveloperName": "How_to_Vote",' +
+                '"Content__c": "Click on a card to vote.",' +
+                '"Category__c": "Voting",' +
+                '"Context__c": "estimationSession",' +
+                '"Order__c": 1,' +
+                '"Active__c": true' +
+            '},' +
+            '{' +
+                '"attributes": {"type": "Help_Content__mdt"},' +
+                '"MasterLabel": "Inactive Article",' +
+                '"DeveloperName": "Inactive_Article",' +
+                '"Content__c": "This should not appear.",' +
+                '"Category__c": "Hidden",' +
+                '"Context__c": "roomList",' +
+                '"Active__c": false' +
+            '}' +
+        ']';
+        
+        GuidanceController.mockArticles = (List<Help_Content__mdt>) JSON.deserialize(
+            jsonString, 
+            List<Help_Content__mdt>.class
+        );
     }
 
     @isTest
     static void testGetUserGuidanceStateNewUser() {
+        setupMockArticles();
         Test.startTest();
         Map<String, Object> state = GuidanceController.getUserGuidanceState('roomList');
         Test.stopTest();
@@ -55,6 +74,7 @@ private class GuidanceControllerTest {
             Completed_Date__c = Datetime.now()
         );
 
+        setupMockArticles();
         Test.startTest();
         Map<String, Object> state = GuidanceController.getUserGuidanceState('roomList');
         Test.stopTest();
@@ -114,6 +134,7 @@ private class GuidanceControllerTest {
 
     @isTest
     static void testGetHelpForContext() {
+        setupMockArticles();
         Test.startTest();
         List<Map<String, Object>> articles = GuidanceController.getHelpForContext('roomList');
         Test.stopTest();
@@ -133,6 +154,7 @@ private class GuidanceControllerTest {
 
     @isTest
     static void testSearchHelp() {
+        setupMockArticles();
         Test.startTest();
         List<Map<String, Object>> results = GuidanceController.searchHelp('Vote');
         Test.stopTest();
@@ -168,6 +190,7 @@ private class GuidanceControllerTest {
 
     @isTest
     static void testGetHelpArticlesByCategory() {
+        setupMockArticles();
         Test.startTest();
         Map<String, List<Map<String, Object>>> articlesByCategory = GuidanceController.getHelpArticlesByCategory();
         Test.stopTest();

@@ -2,7 +2,7 @@
  * @description Test class for EstimationService
  */
 @isTest
-private class EstimationServiceTest {
+public class EstimationServiceTest {
 
     @isTest
     static void testGetScaleValuesFibonacci() {

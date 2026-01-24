@@ -93,19 +93,26 @@ public with sharing class GuidanceController {
         }
     }
 
+    @TestVisible private static List<Help_Content__mdt> mockArticles;
+
     /**
      * @description Gets help content for a specific component using Custom Metadata
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getHelpForContext(String component) {
         try {
-            List<Help_Content__mdt> articles = [
-                SELECT DeveloperName, MasterLabel, Content__c, Category__c, Order__c
-                FROM Help_Content__mdt
-                WHERE Context__c = :component
-                AND Active__c = true
-                ORDER BY Order__c NULLS LAST, MasterLabel
-            ];
+            List<Help_Content__mdt> articles;
+            if (Test.isRunningTest() && mockArticles != null) {
+                articles = mockArticles;
+            } else {
+                articles = [
+                    SELECT DeveloperName, MasterLabel, Content__c, Category__c, Order__c
+                    FROM Help_Content__mdt
+                    WHERE Context__c = :component
+                    AND Active__c = true
+                    ORDER BY Order__c NULLS LAST, MasterLabel
+                ];
+            }
 
             List<Map<String, Object>> result = new List<Map<String, Object>>();
             for (Help_Content__mdt article : articles) {
@@ -133,19 +140,24 @@ public with sharing class GuidanceController {
                 return new List<Map<String, Object>>();
             }
 
-            String searchPattern = '%' + searchTerm.toLowerCase() + '%';
-            List<Help_Content__mdt> allArticles = [
-                SELECT DeveloperName, MasterLabel, Content__c, Category__c, Context__c
-                FROM Help_Content__mdt
-                WHERE Active__c = true
-                ORDER BY Category__c, MasterLabel
-            ];
+            List<Help_Content__mdt> allArticles;
+            if (Test.isRunningTest() && mockArticles != null) {
+                allArticles = mockArticles;
+            } else {
+                allArticles = [
+                    SELECT DeveloperName, MasterLabel, Content__c, Category__c, Context__c
+                    FROM Help_Content__mdt
+                    WHERE Active__c = true
+                    ORDER BY Category__c, MasterLabel
+                ];
+            }
 
+            String term = searchTerm.toLowerCase();
             List<Map<String, Object>> result = new List<Map<String, Object>>();
             for (Help_Content__mdt article : allArticles) {
                 // Manual search since CMDT doesn't support LIKE on custom fields
-                if (article.MasterLabel.toLowerCase().contains(searchTerm.toLowerCase()) ||
-                    (article.Content__c != null && article.Content__c.toLowerCase().contains(searchTerm.toLowerCase()))) {
+                if (article.MasterLabel.toLowerCase().contains(term) ||
+                    (article.Content__c != null && article.Content__c.toLowerCase().contains(term))) {
                     result.add(new Map<String, Object>{
                         'Id' => article.DeveloperName,
                         'Name' => article.MasterLabel,
@@ -185,12 +197,17 @@ public with sharing class GuidanceController {
     @AuraEnabled(cacheable=true)
     public static Map<String, List<Map<String, Object>>> getHelpArticlesByCategory() {
         try {
-            List<Help_Content__mdt> articles = [
-                SELECT DeveloperName, MasterLabel, Content__c, Category__c, Context__c, Order__c
-                FROM Help_Content__mdt
-                WHERE Active__c = true
-                ORDER BY Category__c, Order__c NULLS LAST, MasterLabel
-            ];
+            List<Help_Content__mdt> articles;
+            if (Test.isRunningTest() && mockArticles != null) {
+                articles = mockArticles;
+            } else {
+                articles = [
+                    SELECT DeveloperName, MasterLabel, Content__c, Category__c, Context__c, Order__c
+                    FROM Help_Content__mdt
+                    WHERE Active__c = true
+                    ORDER BY Category__c, Order__c NULLS LAST, MasterLabel
+                ];
+            }
 
             Map<String, List<Map<String, Object>>> articlesByCategory =
                 new Map<String, List<Map<String, Object>>>();
