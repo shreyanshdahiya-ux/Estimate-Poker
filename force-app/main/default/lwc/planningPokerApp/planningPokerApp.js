@@ -4,6 +4,7 @@ export default class PlanningPokerApp extends LightningElement {
     @track currentView = 'roomList';
     @track selectedRoomId = null;
     @track showHelp = false;
+    @track isTransitioning = false;
 
     // View getters
     get showHeader() {
@@ -61,8 +62,13 @@ export default class PlanningPokerApp extends LightningElement {
     }
 
     handleRoomSelect(event) {
+        this.isTransitioning = true;
         this.selectedRoomId = event.detail.roomId;
         this.currentView = 'roomDashboard';
+    }
+
+    handleDashboardLoaded() {
+        this.isTransitioning = false;
     }
 
     handleCreateRoom() {

@@ -532,6 +532,47 @@
     --lwc-colorTextIconDefault: #d97706;
 }
 
+/* Non-Voters Section */
+.non-voters-section {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: linear-gradient(145deg, #fef3c7 0%, #fef9e7 100%);
+    border: 1.5px solid #fbbf24;
+    border-radius: 12px;
+}
+
+.non-voters-section .section-title {
+    color: #92400e;
+    margin-bottom: 1rem;
+}
+
+.non-voters-section lightning-icon {
+    --slds-c-icon-color-foreground: #d97706;
+}
+
+.non-voters-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.non-voter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    color: #78350f;
+    font-weight: 500;
+}
+
+.non-voter-name {
+    white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stats-grid {

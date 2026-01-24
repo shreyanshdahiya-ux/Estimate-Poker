@@ -212,4 +212,17 @@ private class StoryControllerTest {
         }
         Test.stopTest();
     }
+
+    @isTest
+    static void testDeleteAllStoriesByRoom() {
+        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Estimation_Poker_Room__c room = (Estimation_Poker_Room__c) setup.get('room');
+
+        Test.startTest();
+        StoryController.deleteAllStoriesByRoom(room.Id);
+        Test.stopTest();
+
+        List<User_Story__c> remaining = [SELECT Id FROM User_Story__c WHERE Room__c = :room.Id];
+        System.assertEquals(0, remaining.size(), 'All stories should be deleted');
+    }
 }

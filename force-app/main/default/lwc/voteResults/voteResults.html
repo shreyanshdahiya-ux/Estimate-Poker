@@ -209,6 +209,26 @@
             </div>
         </template>
 
+        <!-- Non-Voters Section -->
+        <template lwc:if={hasNonVoters}>
+            <div class="non-voters-section">
+                <h4 class="section-title">
+                    <lightning-icon icon-name="utility:warning" size="xx-small"></lightning-icon>
+                    Did Not Vote ({nonVoters.length})
+                </h4>
+                <div class="non-voters-list">
+                    <template for:each={nonVoters} for:item="member">
+                        <div key={member.odataUserId} class="non-voter-item">
+                            <lightning-avatar src={member.photoUrl} fallback-icon-name="standard:user"
+                                size="small">
+                            </lightning-avatar>
+                            <span class="non-voter-name">{member.displayName}</span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+
         <!-- Outlier Warning -->
         <template lwc:if={hasOutliers}>
             <div class="outlier-warning">

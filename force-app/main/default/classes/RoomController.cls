@@ -164,6 +164,13 @@ public without sharing class RoomController {
                 }
             }
 
+            // Check if current user has voted in this room
+            Boolean currentUserHasVoted = [
+                SELECT COUNT() FROM Estimation_Vote__c 
+                WHERE Room_Member__r.Room__c = :roomId 
+                AND Room_Member__r.User__c = :UserInfo.getUserId()
+            ] > 0;
+
             return new Map<String, Object>{
                 'room' => room,
                 'members' => memberMaps,
@@ -173,7 +180,8 @@ public without sharing class RoomController {
                 'estimatedStories' => estimatedStories,
                 'votingMembers' => votingMembers,
                 'isFacilitator' => room.Facilitator__c == UserInfo.getUserId() ||
-                    hasRoleInRoom(roomId, 'Facilitator')
+                    hasRoleInRoom(roomId, 'Facilitator'),
+                'currentUserHasVoted' => currentUserHasVoted
             };
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
@@ -363,6 +371,18 @@ public without sharing class RoomController {
     @AuraEnabled
     public static List<Room_Member__c> addRoomMembers(Id roomId, List<Map<String, Object>> memberDataList) {
         try {
+            // Validate room status - cannot add members to completed rooms
+            Estimation_Poker_Room__c room = [
+                SELECT Id, Status__c 
+                FROM Estimation_Poker_Room__c 
+                WHERE Id = :roomId 
+                LIMIT 1
+            ];
+            
+            if (room.Status__c == 'Completed') {
+                throw new AuraHandledException('Cannot add members to a completed room.');
+            }
+            
             List<Room_Member__c> newMembers = new List<Room_Member__c>();
 
             for (Map<String, Object> memberData : memberDataList) {

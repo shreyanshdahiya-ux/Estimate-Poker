@@ -3,10 +3,11 @@
         <div slot="actions" class="slds-button-group">
             <template lwc:if={isFacilitator}>
                 <lightning-button label="Delete All" icon-name="utility:delete" variant="destructive-text" 
-                    onclick={handleDeleteAll} disabled={noStories} class="slds-m-right_x-small">
+                    onclick={handleDeleteAll} disabled={isDeleteAllDisabled} class="slds-m-right_x-small">
                 </lightning-button>
             </template>
-            <lightning-button label="Add Story" icon-name="utility:add" variant="brand" onclick={handleAddStory}>
+            <lightning-button label="Add Story" icon-name="utility:add" variant="brand" onclick={handleAddStory}
+                disabled={isAddDisabled}>
             </lightning-button>
         </div>
         <div class="stories-container">
@@ -48,10 +49,11 @@
                                     <lightning-button-menu alternative-text="Actions" icon-size="x-small"
                                         menu-alignment="right" variant="border-filled"
                                         onselect={handleMenuSelect} data-id={story.Id}>
-                                        <lightning-menu-item value="edit" label="Edit Details" icon-name="utility:edit">
+                                        <lightning-menu-item value="edit" label="Edit Details" icon-name="utility:edit"
+                                            disabled={isRoomCompleted}>
                                         </lightning-menu-item>
                                         <lightning-menu-item value="delete" label="Delete Story" icon-name="utility:delete" 
-                                            class="menu-item-destructive">
+                                            class="menu-item-destructive" disabled={isRoomCompleted}>
                                         </lightning-menu-item>
                                     </lightning-button-menu>
                                 </div>
@@ -69,7 +71,8 @@
                     <h4>No stories yet</h4>
                     <p>Add user stories to your room to begin the estimation session.</p>
                     <lightning-button label="Add First Story" icon-name="utility:add" 
-                        variant="brand-outline" onclick={handleAddStory} class="slds-m-top_medium">
+                        variant="brand-outline" onclick={handleAddStory} class="slds-m-top_medium"
+                        disabled={isAddDisabled}>
                     </lightning-button>
                 </div>
             </template>

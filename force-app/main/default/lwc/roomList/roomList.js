@@ -125,6 +125,7 @@ export default class RoomList extends LightningElement {
 
     handleRoomClick(event) {
         const roomId = event.currentTarget.dataset.roomId;
+        this.isLoading = true; // Show spinner while transitioning to room
         this.dispatchEvent(new CustomEvent('roomselect', {
             detail: { roomId }
         }));

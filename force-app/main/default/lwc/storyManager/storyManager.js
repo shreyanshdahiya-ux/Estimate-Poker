@@ -12,6 +12,7 @@ import LightningConfirm from 'lightning/confirm';
 export default class StoryManager extends LightningElement {
     @api roomId;
     @api isFacilitator = false;
+    @api isRoomCompleted = false;
     @api
     get stories() {
         return this._stories;
@@ -55,6 +56,18 @@ export default class StoryManager extends LightningElement {
 
 
     get noStories() { return this.stories.length === 0; }
+    
+    get canManageStories() {
+        return this.isFacilitator && !this.isRoomCompleted;
+    }
+    
+    get isAddDisabled() {
+        return this.isRoomCompleted;
+    }
+    
+    get isDeleteAllDisabled() {
+        return this.noStories || this.isRoomCompleted;
+    }
 
     handleAddStory() {
         this.newStory = { title: '', description: '', acceptanceCriteria: '', notes: '' };
@@ -64,6 +77,8 @@ export default class StoryManager extends LightningElement {
     }
 
     handleMenuSelect(event) {
+        if (this.isRoomCompleted) return;
+        
         const action = event.detail.value;
         const storyId = event.currentTarget.dataset.id;
         

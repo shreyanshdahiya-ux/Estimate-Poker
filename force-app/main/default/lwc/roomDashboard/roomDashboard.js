@@ -28,10 +28,10 @@ export default class RoomDashboard extends LightningElement {
     @track liveSessionDuration = '00:00:00';
     sessionTimerInterval = null;
 
-    // Vote history state
     @track voteHistory = [];
     @track expandedStories = new Set();
     @track isLoadingHistory = false;
+    @track currentUserHasVoted = false;
 
     @track error;
 
@@ -46,18 +46,7 @@ export default class RoomDashboard extends LightningElement {
         this.stopSessionTimer();
     }
 
-    // Load confetti library
-    confettiLoaded = false;
-    async loadConfettiLibrary() {
-        if (this.confettiLoaded) return;
-        try {
-            await loadScript(this, 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js');
-            this.confettiLoaded = true;
-            console.log('Confetti library loaded successfully');
-        } catch (error) {
-            console.error('Error loading confetti library:', error);
-        }
-    }
+
 
     // Sound effects using Web Audio API
     playSound(type) {
@@ -121,52 +110,7 @@ export default class RoomDashboard extends LightningElement {
         }
     }
 
-    // Confetti celebration
-    async triggerConfetti() {
-        try {
-            if (!this.confettiLoaded) {
-                await this.loadConfettiLibrary();
-            }
-            
-            const confettiFunc = window.confetti || (typeof confetti === 'function' ? confetti : null);
-            
-            if (confettiFunc) {
-                const duration = 3000;
-                const animationEnd = Date.now() + duration;
-                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
 
-                const randomInRange = (min, max) => Math.random() * (max - min) + min;
-
-                const interval = setInterval(() => {
-                    const timeLeft = animationEnd - Date.now();
-
-                    if (timeLeft <= 0) {
-                        return clearInterval(interval);
-                    }
-
-                    const particleCount = 50 * (timeLeft / duration);
-
-                    // Fire from left
-                    confettiFunc(Object.assign({}, defaults, {
-                        particleCount,
-                        origin: { x: randomInRange(0.1, 0.3), y: Math.random() * 0.4 + 0.3 },
-                        colors: ['#6366f1', '#818cf8', '#4338ca']
-                    }));
-
-                    // Fire from right
-                    confettiFunc(Object.assign({}, defaults, {
-                        particleCount,
-                        origin: { x: randomInRange(0.7, 0.9), y: Math.random() * 0.4 + 0.3 },
-                        colors: ['#6366f1', '#818cf8', '#4338ca']
-                    }));
-                }, 250);
-            } else {
-                console.error('Confetti function not found even after loadScript');
-            }
-        } catch (error) {
-            console.error('Error triggering confetti:', error);
-        }
-    }
 
     startSessionTimer() {
         if (this.sessionTimerInterval) return;
@@ -469,6 +413,12 @@ export default class RoomDashboard extends LightningElement {
         return !this.isLoadingHistory && (!this.voteHistory || this.voteHistory.length === 0);
     }
 
+    get shouldShowVoteHistory() {
+        const hasVotesInRoom = this.voteHistory && this.voteHistory.length > 0;
+        const isCompleted = this.roomDetails?.room?.Status__c === 'Completed';
+        return hasVotesInRoom || isCompleted;
+    }
+
     get statusBadgeClass() {
         const status = this.roomDetails?.room?.Status__c || '';
         const classes = {
@@ -599,7 +549,16 @@ export default class RoomDashboard extends LightningElement {
         this.dispatchEvent(new CustomEvent('startsession'));
     }
 
+    get canAddMembers() {
+        return !this.isSessionCompleted;
+    }
+
+    get isAddMembersDisabled() {
+        return this.isSessionCompleted;
+    }
+
     handleAddMembers() {
+        if (this.isSessionCompleted) return;
         this.showAddMembersModal = true;
         this.searchTerm = '';
         this.searchResults = [];
@@ -738,6 +697,7 @@ export default class RoomDashboard extends LightningElement {
             const roomData = await getRoomDetails({ roomId: this.roomId });
             if (roomData) {
                 this.roomDetails = JSON.parse(JSON.stringify(roomData));
+                this.currentUserHasVoted = roomData.currentUserHasVoted || false;
                 this.error = undefined;
                 this.processMembersWithStatus();
             }
@@ -754,6 +714,8 @@ export default class RoomDashboard extends LightningElement {
             // Don't show toast on background refreshes to avoid spamming
         } finally {
             this.isLoading = false;
+            // Notify parent that dashboard has loaded
+            this.dispatchEvent(new CustomEvent('loaded'));
         }
     }
 
@@ -821,7 +783,6 @@ export default class RoomDashboard extends LightningElement {
     handleSessionEnded(event) {
         const payload = event.detail;
         this.playSound('end');
-        this.triggerConfetti();
         this.stopSessionTimer();
         this.handleRefresh();
     }

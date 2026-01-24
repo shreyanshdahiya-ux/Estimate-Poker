@@ -40,6 +40,13 @@
             </div>
         </template>
 
+        <!-- Loading Overlay during view transitions -->
+        <template lwc:if={isTransitioning}>
+            <div class="loading-overlay">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+            </div>
+        </template>
+
         <!-- Main Content -->
         <div class={contentClass}>
             <!-- Room List View -->
@@ -57,7 +64,7 @@
             <!-- Room Dashboard View -->
             <template lwc:if={isRoomDashboardView}>
                 <c-room-dashboard room-id={selectedRoomId} onback={handleBackToList}
-                    onstartsession={handleStartSession}>
+                    onstartsession={handleStartSession} onloaded={handleDashboardLoaded}>
                 </c-room-dashboard>
             </template>
 

@@ -28,7 +28,6 @@ export default class TeamManagement extends LightningElement {
     @track memberSearchResults = [];
     @track isSearchingMembers = false;
     memberSearchTimeout;
-
     wiredTeamsResult;
 
     @wire(getAllTeams)
@@ -270,4 +269,5 @@ export default class TeamManagement extends LightningElement {
     showToast(title, message, variant) {
         // this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+
 }

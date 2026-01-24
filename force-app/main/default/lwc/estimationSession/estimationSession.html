@@ -164,13 +164,16 @@
                                 </div>
                                 <div class="member-details">
                                     <p class="member-name">{member.userName}</p>
-                                    <p class="member-role">{member.Role_In_Room__c}</p>
+                                    <p class="member-role">{member.roleDisplay}</p>
                                 </div>
                                 <div class="member-status">
-                                    <template lwc:if={member.Can_Vote__c}>
-                                        <button class="vote-badge like-button" title="Send Like" 
+                                    <template lwc:if={member.isVoter}>
+                                        <button class={member.likeClass} title="Send Like" 
                                                 data-user-id={member.User__c} onclick={handleLikeMember}>
                                             <lightning-icon icon-name="utility:like" size="xx-small" alternative-text="Like"></lightning-icon>
+                                            <template lwc:if={member.isLiked}>
+                                                <div class="like-particle"></div>
+                                            </template>
                                         </button>
                                     </template>
                                 </div>

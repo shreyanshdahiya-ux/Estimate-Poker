@@ -1,6 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { loadScript } from 'lightning/platformResourceLoader';
 import getRoomDetails from '@salesforce/apex/RoomController.getRoomDetails';
 import getCurrentUserMember from '@salesforce/apex/RoomController.getCurrentUserMember';
 import setCurrentStory from '@salesforce/apex/RoomController.setCurrentStory';
@@ -21,6 +20,7 @@ export default class EstimationSession extends LightningElement {
     @track currentStory = null;
     @track currentUserMember = null;
     @track scaleValues = [];
+    @track likedUserIds = new Set();
 
     // Session timer state
     @track sessionElapsedTime = '00:00:00';
@@ -171,14 +171,23 @@ export default class EstimationSession extends LightningElement {
     }
 
     formatMembers(members) {
-        return members.map(member => ({
-            ...member,
-            userName: member.User__r?.Name || 'Unknown',
-            photoUrl: member.User__r?.SmallPhotoUrl,
-            onlineIndicator: member.Is_Online__c
-                ? 'online-indicator online'
-                : 'online-indicator offline'
-        }));
+        return members.map(member => {
+            const isLiked = this.likedUserIds.has(member.User__c);
+            const isInSession = member.Is_Online__c === true;
+            
+            return {
+                ...member,
+                userName: member.User__r?.Name || 'Unknown',
+                photoUrl: member.User__r?.SmallPhotoUrl,
+                onlineIndicator: isInSession
+                    ? 'online-indicator online'
+                    : 'online-indicator offline',
+                isLiked: isLiked,
+                likeClass: isLiked ? 'like-button liked' : 'like-button',
+                roleDisplay: member.Role_In_Room__c || 'Voter',
+                isVoter: member.Can_Vote__c
+            };
+        });
     }
 
     // Computed properties
@@ -300,52 +309,14 @@ export default class EstimationSession extends LightningElement {
 
     async handleEndSession() {
         try {
-            // First ensure confetti script is loaded so it's ready for the event
-            if (!this.confettiLoaded) {
-                await loadScript(this, 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js')
-                    .then(() => { this.confettiLoaded = true; })
-                    .catch(err => console.error('Error pre-loading confetti:', err));
-            }
-
             await updateRoomStatus({ roomId: this.roomId, status: 'Completed' });
-            // Redirection and confetti are now handled by the consolidated handleRoomEvent method
+            // Redirection is now handled by the consolidated handleRoomEvent method
         } catch (error) {
             this.showToast('Error', 'Failed to end session', 'error');
         }
     }
 
-    confettiLoaded = false;
-    async triggerConfetti() {
-        try {
-            if (!this.confettiLoaded) {
-                await loadScript(this, 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js');
-                this.confettiLoaded = true;
-            }
-            
-            if (window.confetti) {
-                const duration = 3 * 1000;
-                const animationEnd = Date.now() + duration;
-                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
 
-                const interval = setInterval(() => {
-                    const timeLeft = animationEnd - Date.now();
-                    if (timeLeft <= 0) return clearInterval(interval);
-
-                    const particleCount = 50 * (timeLeft / duration);
-                    window.confetti(Object.assign({}, defaults, { 
-                        particleCount, 
-                        origin: { x: Math.random() * 0.2 + 0.1, y: Math.random() * 0.3 + 0.6 } 
-                    }));
-                    window.confetti(Object.assign({}, defaults, { 
-                        particleCount, 
-                        origin: { x: Math.random() * 0.2 + 0.7, y: Math.random() * 0.3 + 0.6 } 
-                    }));
-                }, 250);
-            }
-        } catch (error) {
-            console.error('Confetti error:', error);
-        }
-    }
 
     handleEstimateFinalized(event) {
         const { storyId, estimate } = event.detail;
@@ -756,19 +727,8 @@ export default class EstimationSession extends LightningElement {
 
         if (action === 'session_paused' || action === 'session_ended') {
             this.stopTimer();
-            
-            if (action === 'session_ended') {
-                this.triggerConfetti();
-                // 2.5s delay for confetti celebration
-                setTimeout(() => {
-                    this.dispatchEvent(new CustomEvent('sessionend'));
-                }, 2500);
-            } else {
-                // Short delay for pause to ensure state is clear
-                setTimeout(() => {
-                    this.dispatchEvent(new CustomEvent('sessionend'));
-                }, 1000);
-            }
+            // Dispatch session end immediately
+            this.dispatchEvent(new CustomEvent('sessionend'));
         } else if (action === 'session_resumed' || action === 'session_started') {
             this.loadSessionData();
         } else if (action === 'member_like') {
@@ -784,12 +744,19 @@ export default class EstimationSession extends LightningElement {
                 this.showToast('Reacted', `${senderName} liked your vibe! 👍`, 'success');
             }
 
+            // Persistence: Add to likedUserIds set
+            if (targetUserId) {
+                this.likedUserIds.add(targetUserId);
+                // Trigger reactivity by re-formatting members
+                this.members = this.formatMembers(this.members);
+            }
+
             // Animate effect for the target user in the list
             // Find the member item in DOM
             const memberItemButton = this.template.querySelector(`button[data-user-id="${targetUserId}"]`);
             if (memberItemButton) {
                 memberItemButton.classList.add('received-like');
-                setTimeout(() => memberItemButton.classList.remove('received-like'), 1500);
+                setTimeout(() => memberItemButton.classList.remove('received-like'), 2000);
             }
         }
     }

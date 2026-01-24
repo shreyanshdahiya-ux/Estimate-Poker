@@ -388,66 +388,87 @@
 
 /* --- Like Button & Animations --- */
 .like-button {
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     border-radius: 50%;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     color: var(--slate-300);
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    width: 32px;
+    height: 32px;
 }
 
 .like-button:hover {
-    color: var(--rose-500);
-    transform: scale(1.2) rotate(-10deg);
-    background-color: #fff1f2; /* Rose-50 */
+    color: white;
+    transform: scale(1.1);
+    background-color: rgba(16, 185, 129, 0.2);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.like-button.liked {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--emerald-500);
+    color: var(--emerald-500);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.like-button.liked lightning-icon {
+    --slds-c-icon-color-foreground: var(--emerald-500);
 }
 
 .like-button:active {
     transform: scale(0.9);
 }
 
-/* Animation when user clicks the button */
-.liked-animate {
-    animation: likeClick 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    color: var(--rose-500);
-}
-
-@keyframes likeClick {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.5); }
-    100% { transform: scale(1); }
-}
-
 /* Animation when user receives a like */
 .received-like {
-    animation: receiveLike 1s ease-out;
+    animation: receiveLike 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes receiveLike {
     0% { 
         transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
-        color: var(--rose-500);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
     }
-    20% {
-        transform: scale(1.4) rotate(15deg);
-        color: var(--rose-500);
+    30% {
+        transform: scale(1.5) rotate(15deg);
     }
-    40% {
-        transform: scale(1.4) rotate(-15deg);
-    }
-    70% {
-        box-shadow: 0 0 0 15px rgba(244, 63, 94, 0);
-        transform: scale(1);
-        color: var(--rose-500);
+    50% {
+        transform: scale(1.5) rotate(-15deg);
     }
     100% {
-        color: var(--slate-300); /* Return to default color */
+        box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
+        transform: scale(1);
     }
+}
+
+/* Like Particle visual flair */
+.like-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--emerald-500);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    box-shadow: 0 0 8px var(--emerald-500);
+}
+
+.liked .like-particle {
+    animation: particle-ping 2s infinite;
+}
+
+@keyframes particle-ping {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
 }
 
 /* --- No Story Selected State --- */

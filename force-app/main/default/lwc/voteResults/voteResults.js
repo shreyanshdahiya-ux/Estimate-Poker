@@ -5,6 +5,7 @@ export default class VoteResults extends LightningElement {
     @api statistics = {};
     @api scaleValues = [];
     @api storyTotalTime; // Add this
+    @api allMembers = []; // All room members who can vote
 
     get hasVotes() {
         return this.votes && this.votes.length > 0;
@@ -67,9 +68,10 @@ export default class VoteResults extends LightningElement {
     }
 
     get formattedVotes() {
-        if (!this.votes || this.votes.length === 0) return [];
+        const votes = Array.isArray(this.votes) ? this.votes : [];
+        if (votes.length === 0) return [];
 
-        return this.votes.map(vote => {
+        return votes.map(vote => {
             // Calculate formatted duration
             let durationDisplay = '';
             if (vote.duration) {
@@ -93,7 +95,8 @@ export default class VoteResults extends LightningElement {
         if (!this.statistics?.distribution) return [];
 
         const distribution = this.statistics.distribution;
-        const totalVotes = this.votes.length;
+        const votes = Array.isArray(this.votes) ? this.votes : [];
+        const totalVotes = votes.length;
         const maxCount = Math.max(...Object.values(distribution), 1);
 
         // Use scale values to maintain order
@@ -185,6 +188,31 @@ export default class VoteResults extends LightningElement {
     }
 
     get votersCount() {
-        return this.votes ? this.votes.filter(v => v.hasVoted).length : 0;
+        const votes = Array.isArray(this.votes) ? this.votes : [];
+        return votes.filter(v => v.hasVoted).length;
+    }
+
+    get nonVoters() {
+        // Ensure arrays are valid
+        const allMembers = Array.isArray(this.allMembers) ? this.allMembers : [];
+        if (allMembers.length === 0) return [];
+        
+        const votes = Array.isArray(this.votes) ? this.votes : [];
+        
+        // Get list of user IDs who voted
+        const voterIds = new Set(votes.map(v => v.odataUserId));
+        
+        // Filter members who can vote but didn't
+        return allMembers
+            .filter(member => member.canVote && !voterIds.has(member.odataUserId))
+            .map(member => ({
+                ...member,
+                displayName: member.voterName || member.userName,
+                photoUrl: member.voterPhoto || member.photoUrl
+            }));
+    }
+
+    get hasNonVoters() {
+        return this.nonVoters && this.nonVoters.length > 0;
     }
 }
