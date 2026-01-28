@@ -2,7 +2,7 @@
  * @description Test class for StoryController
  */
 @isTest
-public class StoryControllerTest {
+public with sharing class StoryControllerTest {
 
     @isTest
     static void testCreateStory() {

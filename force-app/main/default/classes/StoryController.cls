@@ -389,6 +389,14 @@ public without sharing class StoryController {
                 UserInfo.getUserId(),
                 storyData.isEmpty() ? null : JSON.serialize(storyData)
             );
+
+            // Auto-advance logic for skipped stories
+            if (status == 'Skipped') {
+                User_Story__c nextStory = getNextPendingStory(story.Room__c, storyId);
+                if (nextStory != null) {
+                    RoomController.setCurrentStory(story.Room__c, nextStory.Id);
+                }
+            }
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }

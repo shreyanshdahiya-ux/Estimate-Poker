@@ -2,7 +2,7 @@
  * @description Test class for PlatformEventPublisher
  */
 @isTest
-public class PlatformEventPublisherTest {
+public with sharing class PlatformEventPublisherTest {
 
     @isTest
     static void testPublishVoteEvent() {

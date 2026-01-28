@@ -2,7 +2,7 @@
  * @description Test class for ValidationService
  */
 @isTest
-public class ValidationServiceTest {
+public with sharing class ValidationServiceTest {
 
     @isTest
     static void testValidateRoomDataValid() {

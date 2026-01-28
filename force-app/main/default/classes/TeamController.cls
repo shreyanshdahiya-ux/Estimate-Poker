@@ -85,6 +85,7 @@ public without sharing class TeamController {
                     'description' => team.Description__c,
                     'department' => team.Department__c,
                     'teamLead' => team.Team_Lead__r?.Name,
+                    'teamLeadId' => team.Team_Lead__c,
                     'memberCount' => memberCounts.get(team.Id) != null ? memberCounts.get(team.Id) : 0
                 });
             }
@@ -394,6 +395,36 @@ public without sharing class TeamController {
             ];
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
+        }
+    }
+    /**
+     * @description Deletes a team
+     */
+    @AuraEnabled
+    public static void deleteTeam(Id teamId) {
+        try {
+            Team__c team = [
+                SELECT Id, Team_Lead__c FROM Team__c WHERE Id = :teamId LIMIT 1
+            ];
+
+            if (team.Team_Lead__c != UserInfo.getUserId()) {
+                throw new AuraHandledException('Only the Team Lead can delete the team.');
+            }
+
+            delete team;
+
+            // Publish Team Deleted Event
+            PlatformEventPublisher.publishTeamEvent(
+                teamId,
+                'team_deleted',
+                UserInfo.getUserId(),
+                UserInfo.getName(),
+                null
+            );
+        } catch (Exception e) {
+            String errorMessage = e.getMessage();
+            System.debug('Error deleting team: ' + errorMessage + '\n' + e.getStackTraceString());
+            throw new AuraHandledException(errorMessage);
         }
     }
 }

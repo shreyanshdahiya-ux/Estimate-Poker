@@ -1,7 +1,9 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import LightningConfirm from 'lightning/confirm';
 import getAllTeams from '@salesforce/apex/TeamController.getAllTeams';
 import createTeam from '@salesforce/apex/TeamController.createTeam';
+import deleteTeam from '@salesforce/apex/TeamController.deleteTeam';
 import getTeamMembers from '@salesforce/apex/TeamController.getTeamMembers';
 import addTeamMember from '@salesforce/apex/TeamController.addTeamMember';
 import removeTeamMember from '@salesforce/apex/TeamController.removeTeamMember';
@@ -9,6 +11,7 @@ import updateTeamMemberRole from '@salesforce/apex/TeamController.updateTeamMemb
 import searchUsers from '@salesforce/apex/TeamController.searchUsers';
 import updateTeam from '@salesforce/apex/TeamController.updateTeam';
 import { refreshApex } from '@salesforce/apex';
+import USER_ID from '@salesforce/user/Id';
 
 export default class TeamManagement extends LightningElement {
     @track teams = [];
@@ -266,8 +269,36 @@ export default class TeamManagement extends LightningElement {
         ];
     }
 
-    showToast(title, message, variant) {
-        // this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    get isLead() {
+        return this.selectedTeam && this.selectedTeam.teamLeadId === USER_ID;
     }
 
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
+
+    async handleDeleteTeam() {
+        if (!this.selectedTeam) return;
+
+        const result = await LightningConfirm.open({
+            message: `Are you sure you want to delete the team "${this.selectedTeam.name}"? This action cannot be undone.`,
+            variant: 'headerless',
+            label: 'Delete Team',
+            theme: 'error'
+        });
+
+        if (result) {
+            try {
+                this.isLoading = true;
+                await deleteTeam({ teamId: this.selectedTeam.id });
+                this.showToast('Success', 'Team deleted successfully', 'success');
+                this.handleCloseTeamDetailModal();
+                await refreshApex(this.wiredTeamsResult);
+            } catch (error) {
+                this.showToast('Error', error.body?.message || 'Failed to delete team', 'error');
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    }
 }

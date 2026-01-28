@@ -68,7 +68,7 @@ export default class VoteResults extends LightningElement {
     }
 
     get formattedVotes() {
-        const votes = Array.isArray(this.votes) ? this.votes : [];
+        const votes = (Array.isArray(this.votes) ? this.votes : []).filter(v => v.hasVoted !== false);
         if (votes.length === 0) return [];
 
         return votes.map(vote => {
@@ -95,7 +95,7 @@ export default class VoteResults extends LightningElement {
         if (!this.statistics?.distribution) return [];
 
         const distribution = this.statistics.distribution;
-        const votes = Array.isArray(this.votes) ? this.votes : [];
+        const votes = (Array.isArray(this.votes) ? this.votes : []).filter(v => v.hasVoted !== false);
         const totalVotes = votes.length;
         const maxCount = Math.max(...Object.values(distribution), 1);
 
@@ -173,7 +173,7 @@ export default class VoteResults extends LightningElement {
     get firstVoter() {
         if (!this.votes || this.votes.length === 0) return null;
         // Filter out those who haven't voted just in case, though votes usually implies hasVoted=true
-        const sorted = [...this.votes].filter(v => v.hasVoted).sort((a, b) => {
+        const sorted = [...this.votes].filter(v => v.hasVoted !== false).sort((a, b) => {
             return new Date(a.votedAt) - new Date(b.votedAt);
         });
         return sorted.length > 0 ? sorted[0] : null;
@@ -181,7 +181,7 @@ export default class VoteResults extends LightningElement {
 
     get lastVoter() {
         if (!this.votes || this.votes.length === 0) return null;
-        const sorted = [...this.votes].filter(v => v.hasVoted).sort((a, b) => {
+        const sorted = [...this.votes].filter(v => v.hasVoted !== false).sort((a, b) => {
             return new Date(b.votedAt) - new Date(a.votedAt);
         });
         return sorted.length > 0 ? sorted[0] : null;
@@ -189,7 +189,7 @@ export default class VoteResults extends LightningElement {
 
     get votersCount() {
         const votes = Array.isArray(this.votes) ? this.votes : [];
-        return votes.filter(v => v.hasVoted).length;
+        return votes.filter(v => v.hasVoted !== false).length;
     }
 
     get nonVoters() {
@@ -200,7 +200,7 @@ export default class VoteResults extends LightningElement {
         const votes = Array.isArray(this.votes) ? this.votes : [];
         
         // Get list of user IDs who voted
-        const voterIds = new Set(votes.map(v => v.odataUserId));
+        const voterIds = new Set(votes.filter(v => v.hasVoted !== false).map(v => v.odataUserId));
         
         // Filter members who can vote but didn't
         return allMembers

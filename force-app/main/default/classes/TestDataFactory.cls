@@ -2,7 +2,7 @@
  * @description Test data factory for Planning Poker tests
  */
 @isTest
-public class TestDataFactory {
+public with sharing class TestDataFactory {
 
     public static Team__c createTeam(String name) {
         Team__c team = new Team__c(

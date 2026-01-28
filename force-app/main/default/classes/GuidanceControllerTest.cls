@@ -2,7 +2,7 @@
  * @description Test class for GuidanceController
  */
 @isTest
-public class GuidanceControllerTest {
+public with sharing class GuidanceControllerTest {
 
     @TestSetup
     static void setupTestData() {

@@ -125,7 +125,8 @@
 
 
                         <lightning-input-rich-text 
-                            label="Description" 
+                            label="Story Description" 
+                            label-visible
                             value={newStory.description}
                             onchange={handleInputChange} 
                             data-field="description" 
@@ -137,6 +138,7 @@
 
                         <lightning-input-rich-text 
                             label="Acceptance Criteria" 
+                            label-visible
                             value={newStory.acceptanceCriteria}
                             onchange={handleInputChange} 
                             data-field="acceptanceCriteria" 

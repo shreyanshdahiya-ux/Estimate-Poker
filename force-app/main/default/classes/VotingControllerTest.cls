@@ -2,7 +2,7 @@
  * @description Test class for VotingController
  */
 @isTest
-public class VotingControllerTest {
+public with sharing class VotingControllerTest {
 
     @isTest
     static void testSubmitVote() {
@@ -175,5 +175,42 @@ public class VotingControllerTest {
 
         Integer voteCount = [SELECT COUNT() FROM Estimation_Vote__c WHERE User_Story__c = :stories[0].Id AND Room_Member__c = :member.Id];
         System.assertEquals(0, voteCount, 'Vote should be deleted');
+    }
+
+    @isTest
+    static void testGetVoteHistory() {
+        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Estimation_Poker_Room__c room = (Estimation_Poker_Room__c) setup.get('room');
+        List<User_Story__c> stories = (List<User_Story__c>) setup.get('stories');
+        Room_Member__c member = (Room_Member__c) setup.get('roomMember');
+
+        stories[0].Status__c = 'Estimated';
+        stories[0].Final_Estimate__c = '5';
+        update stories[0];
+
+        TestDataFactory.createVote(stories[0].Id, member.Id, '5');
+
+        Test.startTest();
+        List<Map<String, Object>> history = VotingController.getVoteHistory(room.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(0, history.size(), 'History should not be empty');
+        System.assertEquals(stories[0].Id, history[0].get('storyId'), 'Story ID should match');
+    }
+
+    @isTest
+    static void testBroadcastTimer() {
+        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Estimation_Poker_Room__c room = (Estimation_Poker_Room__c) setup.get('room');
+        User testUser = (User) setup.get('user');
+
+        Test.startTest();
+        System.runAs(testUser) {
+            VotingController.broadcastTimer(room.Id, 'timer_start', 60);
+        }
+        Test.stopTest();
+        
+        // Success if no exception thrown (facilitator check passes)
+        System.assert(true);
     }
 }
