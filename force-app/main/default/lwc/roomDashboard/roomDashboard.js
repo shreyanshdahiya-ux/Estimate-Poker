@@ -339,11 +339,17 @@ export default class RoomDashboard extends LightningElement {
                 hasComment: !!vote.comment
             }));
 
+            // Calculate status colors for the mini status line
+            let statusColor = '#94a3b8'; // Neutral
+            if (item.status === 'Estimated') statusColor = '#10B981';
+            if (item.status === 'Discussing') statusColor = '#6366f1';
+            if (item.status === 'Voting') statusColor = '#f59e0b';
+
             return {
                 ...item,
                 isExpanded: isExpanded,
                 expandIcon: isExpanded ? 'utility:chevrondown' : 'utility:chevronright',
-                statusClass: this.getHistoryStatusClass(item.status),
+                statusStyle: `background-color: ${statusColor}; color: ${statusColor};`, 
                 formattedDate: this.formatMemberTime(item.estimatedDate),
                 votes: votes,
                 hasVotes: votes.length > 0

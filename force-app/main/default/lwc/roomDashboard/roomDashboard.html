@@ -235,70 +235,62 @@
                     </template>
 
                     <template lwc:if={hasVoteHistory}>
-                        <div class="history-list">
+                        <div class="history-list dense-mode">
                             <template for:each={voteHistory} for:item="historyItem">
                                 <div key={historyItem.storyId} class="history-item">
-                                    <!-- Story Header (Clickable to expand) -->
-                                    <div class="history-item-header" data-story-id={historyItem.storyId}
+                                    <!-- Story Header (High-Density) -->
+                                    <div class="history-item-header high-density" data-story-id={historyItem.storyId}
                                         onclick={handleToggleStoryExpand}>
+                                        <div class="status-indicator" style={historyItem.statusStyle}></div>
                                         <div class="history-expand-icon">
                                             <lightning-icon icon-name={historyItem.expandIcon}
-                                                size="xx-small"></lightning-icon>
+                                                size="xxx-small"></lightning-icon>
                                         </div>
                                         <div class="history-story-info">
                                             <p class="history-story-title slds-truncate">{historyItem.storyTitle}</p>
                                             <div class="history-story-meta">
-                                                <span class={historyItem.statusClass}>{historyItem.status}</span>
                                                 <template lwc:if={historyItem.finalEstimate}>
-                                                    <span
-                                                        class="history-estimate-badge">{historyItem.finalEstimate}</span>
+                                                    <span class="history-estimate-badge-mini">{historyItem.finalEstimate}</span>
                                                 </template>
-                                                <span class="history-vote-count">{historyItem.voteCount} votes</span>
+                                                <span class="history-vote-count-mini">{historyItem.voteCount} votes</span>
                                                 <template lwc:if={historyItem.formattedDate}>
-                                                    <span class="history-date">{historyItem.formattedDate}</span>
+                                                    <span class="history-date-mini">{historyItem.formattedDate}</span>
                                                 </template>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Expanded Vote Details -->
+                                    <!-- Expanded Vote Details (High-Density) -->
                                     <template lwc:if={historyItem.isExpanded}>
-                                        <div class="history-votes-container">
+                                        <div class="history-votes-container-dense">
                                             <template lwc:if={historyItem.hasVotes}>
                                                 <template for:each={historyItem.votes} for:item="vote">
-                                                    <div key={vote.odataUserId} class="history-vote-item">
-                                                        <div class="vote-voter-info">
-                                                            <lightning-avatar src={vote.voterPhoto}
-                                                                fallback-icon-name="standard:user" size="x-small">
-                                                            </lightning-avatar>
-                                                            <span class="vote-voter-name">{vote.voterName}</span>
+                                                    <div key={vote.odataUserId} class="history-vote-row">
+                                                        <div class="vote-voter-info-mini">
+                                                            <img src={vote.voterPhoto} class="voter-avatar-mini" />
+                                                            <span class="vote-voter-name-mini">{vote.voterName}</span>
                                                         </div>
-                                                        <div class="vote-details">
-                                                            <span class="vote-value-badge">{vote.voteValue}</span>
+                                                        <div class="vote-data-ribbon">
+                                                            <span class="vote-val-mini">{vote.voteValue}</span>
                                                             <template lwc:if={vote.confidenceLabel}>
-                                                                <span
-                                                                    class={vote.confidenceClass}>{vote.confidenceLabel}</span>
+                                                                <span class={vote.confidenceClass}>{vote.confidenceLabel}</span>
                                                             </template>
                                                             <template lwc:if={vote.formattedDuration}>
-                                                                <span class="vote-duration slds-var-m-right_x-small">⏱️
-                                                                    {vote.formattedDuration}</span>
+                                                                <span class="vote-meta-txt">⏱️ {vote.formattedDuration}</span>
                                                             </template>
-                                                            <span class="vote-time">{vote.formattedTime}</span>
+                                                            <span class="vote-meta-txt">{vote.formattedTime}</span>
                                                         </div>
                                                         <template lwc:if={vote.hasComment}>
-                                                            <div class="vote-comment">
-                                                                <lightning-icon icon-name="utility:comments"
-                                                                    size="xx-small"></lightning-icon>
-                                                                <span class="comment-text">{vote.comment}</span>
+                                                            <div class="vote-comment-mini" title={vote.comment}>
+                                                                <lightning-icon icon-name="utility:comments" size="xxx-small"></lightning-icon>
+                                                                <span class="comment-peek">{vote.comment}</span>
                                                             </div>
                                                         </template>
                                                     </div>
                                                 </template>
                                             </template>
                                             <template lwc:else>
-                                                <div class="no-votes-message">
-                                                    <p>No vote details available</p>
-                                                </div>
+                                                <div class="no-votes-message-mini">No vote details available</div>
                                             </template>
                                         </div>
                                     </template>
