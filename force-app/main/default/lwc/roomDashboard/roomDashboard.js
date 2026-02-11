@@ -216,51 +216,86 @@ export default class RoomDashboard extends LightningElement {
     get storyEstimatesForChart() {
         if (!this.roomDetails?.stories) return [];
 
-        // Group stories by estimate value
-        const estimateCounts = {};
+        // Group stories by estimate value (use Final_Estimate__c presence, not status)
+        const estimatesMap = new Map();
         this.roomDetails.stories.forEach(story => {
-            if (story.Status__c === 'Estimated' && story.Final_Estimate__c) {
-                const estimate = story.Final_Estimate__c;
-                estimateCounts[estimate] = (estimateCounts[estimate] || 0) + 1;
+            if (story.Final_Estimate__c) {
+                const est = story.Final_Estimate__c;
+                estimatesMap.set(est, (estimatesMap.get(est) || 0) + 1);
             }
         });
 
-        // Convert to array and sort by estimate value
-        const chartData = Object.entries(estimateCounts).map(([estimate, count]) => ({
-            estimate: estimate,
-            count: count
-        }));
+        const chartData = Array.from(estimatesMap.entries())
+            .map(([estimate, count]) => ({ estimate, count }));
 
-        // Sort by numeric value if possible
-        chartData.sort((a, b) => {
-            const numA = parseFloat(a.estimate) || 0;
-            const numB = parseFloat(b.estimate) || 0;
-            return numA - numB;
-        });
+        if (chartData.length === 0) return [];
 
         // Calculate max for scaling
         const maxCount = Math.max(...chartData.map(d => d.count), 1);
         const estimatedCount = this.estimatedStories || 1;
 
+        // Electric Sunset Palette: Violet → Magenta → Ruby → Orange
+        const premiumHues = [270, 310, 345, 12, 35]; 
+
+        // Find the most frequent estimate for consensus highlighting
+        const sortedData = [...chartData].sort((a,b) => b.count - a.count);
+        const maxOccurrences = sortedData[0]?.count || 0;
+        const consensusEstimate = sortedData[0]?.estimate;
+
         // Calculate bar heights (max 100px) and add style
         return chartData.map((item, index) => {
             const percentage = Math.round((item.count / estimatedCount) * 100);
-            const hue = (index * 45) % 360;
+            const hue = premiumHues[index % premiumHues.length];
             const barHeight = Math.round((item.count / maxCount) * 100);
             
+            // Item is consensus if it's the most frequent and has > 1 occurrence or is the only one
+            const isConsensus = item.estimate === consensusEstimate && (maxOccurrences > 1 || chartData.length === 1);
+
             return {
                 ...item,
                 percentage: percentage,
                 barHeight: barHeight,
+                isConsensus: isConsensus,
                 tooltip: `${item.count} stories (${percentage}%) were estimated as ${item.estimate}`,
-                barStyle: `--bar-height: ${barHeight}px; --bar-color: hsla(${hue}, 70%, 50%, 0.85); --bar-glow: hsla(${hue}, 70%, 50%, 0.4); --anim-delay: ${index * 0.1}s`,
-                itemClass: `bar-chart-item bar-color-${index % 8}`
+                tooltipMain: `${percentage}%`,
+                tooltipSub: `${item.count} Votes`,
+                barStyle: `--bar-height: ${barHeight}px; 
+                           --bar-color: hsla(${hue}, 90%, 55%, 1.0); 
+                           --bar-glow: hsla(${hue}, 90%, 55%, 0.45); 
+                           --anim-delay: ${index * 0.12}s;`,
+                itemClass: `bar-chart-item ${isConsensus ? 'is-consensus' : ''} ${isConsensus ? 'pulse-consensus' : ''}`
             };
         });
     }
 
+    get complexityScore() {
+        const avg = parseFloat(this.averageEstimate);
+        if (isNaN(avg) || avg === 0) return 'LOW';
+        if (avg > 8) return 'HIGH';
+        if (avg > 3) return 'MED';
+        return 'LOW';
+    }
+
+    get averageEstimate() {
+        const estimatedStories = this.roomDetails?.stories?.filter(s => s.Status__c === 'Estimated' && s.Final_Estimate__c) || [];
+        if (estimatedStories.length === 0) return '0.0';
+        
+        let sum = 0;
+        let count = 0;
+        
+        estimatedStories.forEach(s => {
+            const val = parseFloat(s.Final_Estimate__c);
+            if (!isNaN(val)) {
+                sum += val;
+                count++;
+            }
+        });
+        
+        return count > 0 ? (sum / count).toFixed(1) : '0.0';
+    }
+
     get hasChartData() {
-        return this.storyEstimatesForChart.length > 0;
+        return this.storyEstimatesForChart && this.storyEstimatesForChart.length > 0;
     }
 
     // Process members to add display properties
@@ -437,15 +472,17 @@ export default class RoomDashboard extends LightningElement {
     }
 
     get totalStories() {
-        return this.roomDetails?.totalStories || 0;
+        return this.roomDetails?.stories?.length || 0;
     }
 
     get estimatedStories() {
-        return this.roomDetails?.estimatedStories || 0;
+        // Count stories that have Final_Estimate__c (these show as 'Estimated')
+        return this.roomDetails?.stories?.filter(s => s.Final_Estimate__c)?.length || 0;
     }
 
     get pendingStories() {
-        return this.totalStories - this.estimatedStories;
+        // Count stories without Final_Estimate__c (these show as 'Pending' or 'Voting')
+        return this.roomDetails?.stories?.filter(s => !s.Final_Estimate__c)?.length || 0;
     }
 
     get votingMembers() {

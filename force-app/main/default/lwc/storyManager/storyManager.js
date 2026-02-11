@@ -19,13 +19,26 @@ export default class StoryManager extends LightningElement {
     }
 
     set stories(data) {
-        console.log('StoryManager: set stories called with', JSON.stringify(data));
         if (data) {
-            this._stories = data.map(s => ({
-                ...s,
-                statusClass: `status-badge status-${(s.Status__c || 'Pending').toLowerCase()}`,
-                statusIcon: s.Status__c === 'Estimated' ? 'utility:check' : s.Status__c === 'Voting' ? 'utility:record' : 'utility:clock'
-            }));
+            this._stories = data.map(s => {
+                let status = s.Status__c || 'Pending';
+                
+                // If story has a final estimate, it should always show as 'Estimated'
+                if (s.Final_Estimate__c) {
+                    status = 'Estimated';
+                }
+                // If session is completed and story is still 'Voting' without estimate, show as 'Pending'
+                else if (this.isRoomCompleted && status === 'Voting') {
+                    status = 'Pending';
+                }
+
+                return {
+                    ...s,
+                    Status__c: status,
+                    statusClass: `status-badge status-${status.toLowerCase()}`,
+                    statusIcon: status === 'Estimated' ? 'utility:check' : status === 'Voting' ? 'utility:record' : 'utility:clock'
+                };
+            });
         } else {
             this._stories = [];
         }

@@ -19,6 +19,10 @@
     z-index: 1;
 }
 
+.story-card[draggable="true"]:hover {
+    cursor: pointer; /* Show hand icon for draggability */
+}
+
 /* Ensure proper stacking for dropdown menus - first card needs higher z-index when active */
 .story-card:first-child {
     z-index: 2;
@@ -43,7 +47,7 @@
 
 /* Drag Handle */
 .drag-handle {
-    cursor: grab;
+    cursor: pointer; /* Changed to hand icon as requested */
     color: #94a3b8;
     display: flex;
     align-items: center;
