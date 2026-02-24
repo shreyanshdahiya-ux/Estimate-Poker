@@ -29,7 +29,7 @@ public with sharing class VotingController {
             // Check if user can vote
             if (!ValidationService.canUserVote(roomMemberId, storyId)) {
                 // Get more details for error message
-                User_Story__c storyCheck = [SELECT Status__c, Votes_Revealed__c FROM User_Story__c WHERE Id = :storyId WITH USER_MODE LIMIT 1];
+                User_Story__c storyCheck = [SELECT Status__c, Votes_Revealed__c FROM User_Story__c WHERE Id = :storyId LIMIT 1];
                 String reason = 'You cannot vote on this story. ';
                 if (storyCheck.Status__c != 'Voting' && storyCheck.Status__c != 'Discussing') {
                     reason += 'Story status must be "Voting" (current: ' + storyCheck.Status__c + ')';
@@ -48,7 +48,6 @@ public with sharing class VotingController {
                 SELECT Id, User__c, User__r.Name, Room__c, Room__r.Estimation_Scale__c
                 FROM Room_Member__c
                 WHERE Id = :roomMemberId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -58,7 +57,6 @@ public with sharing class VotingController {
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
                 AND Room_Member__c = :roomMemberId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -80,7 +78,7 @@ public with sharing class VotingController {
                 vote.Comment__c = voteComment;
                 vote.Confidence_Level__c = confidenceLevel;
                 vote.Duration__c = duration;
-                update as user vote;
+                update vote;
                 action = 'vote_updated';
             } else {
                 // Create new vote
@@ -95,13 +93,13 @@ public with sharing class VotingController {
                     Confidence_Level__c = confidenceLevel,
                     Duration__c = duration
                 );
-                insert as user vote;
+                insert vote;
                 action = 'voted';
             }
 
             // Get vote count and total members (exclude automated process users)
             Integer voteCount = [
-                SELECT COUNT() FROM Estimation_Vote__c WHERE User_Story__c = :storyId WITH USER_MODE
+                SELECT COUNT() FROM Estimation_Vote__c WHERE User_Story__c = :storyId
             ];
 
             Integer totalMembers = [
@@ -110,7 +108,6 @@ public with sharing class VotingController {
                 AND Can_Vote__c = true
                 AND (Status__c = 'Active' OR Status__c = 'Invited')
                 AND User__r.UserType != 'AutomatedProcess'
-                WITH USER_MODE
             ];
 
             // Publish vote event
@@ -153,7 +150,6 @@ public with sharing class VotingController {
                 SELECT Id, Votes_Revealed__c, Room__c, Room__r.Estimation_Scale__c, Status__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -164,7 +160,6 @@ public with sharing class VotingController {
                        Voted_DateTime__c, Duration__c
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
-                WITH USER_MODE
                 ORDER BY Voted_DateTime__c
             ];
 
@@ -177,7 +172,6 @@ public with sharing class VotingController {
                 AND Can_Vote__c = true
                 AND (Status__c = 'Active' OR Status__c = 'Invited')
                 AND User__r.UserType != 'AutomatedProcess'
-                WITH USER_MODE
             ];
 
             Set<Id> votedMemberIds = new Set<Id>();
@@ -254,9 +248,15 @@ public with sharing class VotingController {
                 SELECT Id, Room__c, Status__c, Votes_Revealed__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
+
+            // Security check: Only facilitators can reveal votes
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                AuraHandledException ex = new AuraHandledException('Only facilitators can reveal votes');
+                ex.setMessage('Only facilitators can reveal votes');
+                throw ex;
+            }
 
             // Update votes to revealed
             List<Estimation_Vote__c> votes = [
@@ -266,13 +266,12 @@ public with sharing class VotingController {
                        Room_Member__r.User__r.SmallPhotoUrl
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
-                WITH USER_MODE
             ];
 
             for (Estimation_Vote__c vote : votes) {
                 vote.Revealed__c = true;
             }
-            update as user votes;
+            update votes;
 
             // Update story
             story.Votes_Revealed__c = true;
@@ -284,7 +283,7 @@ public with sharing class VotingController {
             Decimal average = EstimationService.calculateAverage(votes);
             story.Average_Estimate__c = average;
 
-            update as user story;
+            update story;
 
             // Build all votes JSON with full detail for the results component
             List<Map<String, Object>> allVotesDataList = new List<Map<String, Object>>();
@@ -339,22 +338,27 @@ public with sharing class VotingController {
                 SELECT Id, Room__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
+            // Security check: Only facilitators can reset votes
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                AuraHandledException ex = new AuraHandledException('Only facilitators can reset votes');
+                ex.setMessage('Only facilitators can reset votes');
+                throw ex;
+            }
+
             // Delete all votes
-            delete as user [SELECT Id FROM Estimation_Vote__c WHERE User_Story__c = :storyId WITH USER_MODE];
+            List<Estimation_Vote__c> votesToDelete = [SELECT Id FROM Estimation_Vote__c WHERE User_Story__c = :storyId];
+            delete votesToDelete;
 
             // Reset story
             Datetime now = Datetime.now();
-            update as user new User_Story__c(
-                Id = storyId,
-                Votes_Revealed__c = false,
-                Average_Estimate__c = null,
-                Status__c = 'Voting',
-                Voting_Start_Time__c = now
-            );
+            story.Votes_Revealed__c = false;
+            story.Average_Estimate__c = null;
+            story.Status__c = 'Voting';
+            story.Voting_Start_Time__c = now;
+            update story;
 
             // Build additional data for sync
             Map<String, Object> data = new Map<String, Object>{
@@ -404,16 +408,23 @@ public with sharing class VotingController {
     @AuraEnabled
     public static void finalizeEstimate(Id storyId, String finalValue) {
         try {
-            // Validate
-            ValidationService.validateFinalizeEstimate(storyId);
-
+            // Get story and room details first for security check
             User_Story__c story = [
                 SELECT Id, Room__c, Room__r.Estimation_Scale__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
+
+            // Security check: Only facilitators can finalize estimates
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                AuraHandledException ex = new AuraHandledException('Only facilitators can finalize estimates');
+                ex.setMessage('Only facilitators can finalize estimates');
+                throw ex;
+            }
+
+            // Validate finalized estimate
+            ValidationService.validateFinalizeEstimate(storyId);
 
             // Get vote summary for event
             List<Estimation_Vote__c> votes = [
@@ -421,7 +432,6 @@ public with sharing class VotingController {
                        Room_Member__r.User__r.Name
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
-                WITH USER_MODE
             ];
 
             Map<String, Object> summary = EstimationService.getVoteStatistics(votes);
@@ -434,7 +444,7 @@ public with sharing class VotingController {
             story.Votes_Revealed__c = true;
             story.Estimated_Date__c = Datetime.now();
             story.Estimated_By__c = UserInfo.getUserId();
-            update as user story;
+            update story;
 
             // Publish finalized event
             PlatformEventPublisher.publishEstimateFinalizedEvent(
@@ -476,7 +486,6 @@ public with sharing class VotingController {
                 SELECT Id, Vote_Value__c, Vote_Number__c, Duration__c
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
-                WITH USER_MODE
             ];
 
             return EstimationService.getVoteStatistics(votes);
@@ -502,7 +511,6 @@ public with sharing class VotingController {
                 FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
                 AND Room_Member__c = :roomMemberId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -527,20 +535,18 @@ public with sharing class VotingController {
                 SELECT Id, User__c, User__r.Name, Room__c
                 FROM Room_Member__c
                 WHERE Id = :roomMemberId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
-            delete as user [
+            delete [
                 SELECT Id FROM Estimation_Vote__c
                 WHERE User_Story__c = :storyId
                 AND Room_Member__c = :roomMemberId
-                WITH USER_MODE
             ];
 
             // Get updated vote count (exclude automated process users)
             Integer voteCount = [
-                SELECT COUNT() FROM Estimation_Vote__c WHERE User_Story__c = :storyId WITH USER_MODE
+                SELECT COUNT() FROM Estimation_Vote__c WHERE User_Story__c = :storyId
             ];
 
             Integer totalMembers = [
@@ -549,7 +555,6 @@ public with sharing class VotingController {
                 AND Can_Vote__c = true
                 AND (Status__c = 'Active' OR Status__c = 'Invited')
                 AND User__r.UserType != 'AutomatedProcess'
-                WITH USER_MODE
             ];
 
             // Publish event
@@ -591,7 +596,6 @@ public with sharing class VotingController {
                 FROM User_Story__c
                 WHERE Room__c = :roomId
                 AND (Votes_Revealed__c = true OR Status__c = 'Estimated')
-                WITH USER_MODE
                 ORDER BY LastModifiedDate DESC NULLS LAST, CreatedDate DESC
             ];
 
@@ -613,7 +617,6 @@ public with sharing class VotingController {
                        Room_Member__r.User__r.Name, Room_Member__r.User__r.SmallPhotoUrl
                 FROM Estimation_Vote__c
                 WHERE User_Story__c IN :storyIds
-                WITH USER_MODE
                 ORDER BY Voted_DateTime__c ASC
             ];
 

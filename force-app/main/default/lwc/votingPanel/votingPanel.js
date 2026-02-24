@@ -7,6 +7,8 @@ import finalizeEstimate from '@salesforce/apex/VotingController.finalizeEstimate
 import setStoryStatus from '@salesforce/apex/StoryController.setStoryStatus';
 import broadcastTimer from '@salesforce/apex/VotingController.broadcastTimer';
 
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
 // Helper to extract error message from various error formats
 function getErrorMessage(error) {
     // Array of errors
@@ -918,8 +920,15 @@ export default class VotingPanel extends LightningElement {
         }
     }
 
-    // eslint-disable-next-line no-unused-vars
-    showToast(_title, _message, _variant) {
-        // Toast placeholder - ShowToastEvent not available in all contexts
+    showToast(title, message, variant) {
+        /*
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title: title,
+                message: message,
+                variant: variant || 'info'
+            })
+        );
+        */
     }
 }

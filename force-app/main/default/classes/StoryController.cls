@@ -24,7 +24,6 @@ public with sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
-                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -41,7 +40,7 @@ public with sharing class StoryController {
                 Notes__c = (String) storyData.get('notes')
             );
 
-            insert as user story;
+            insert story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -77,7 +76,6 @@ public with sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
-                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -100,7 +98,7 @@ public with sharing class StoryController {
                 ));
             }
 
-            insert as user stories;
+            insert stories;
 
             // Publish events for each story
             for (User_Story__c story : stories) {
@@ -138,9 +136,13 @@ public with sharing class StoryController {
                        External_Story_Id__c, Notes__c, Final_Estimate__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
+
+            // Security check: Only facilitators can update stories
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                throw new AuraHandledException('Only facilitators can update stories');
+            }
 
             if (storyData.containsKey('title')) {
                 story.Story_Title__c = (String) storyData.get('title');
@@ -161,7 +163,7 @@ public with sharing class StoryController {
                 story.Notes__c = (String) storyData.get('notes');
             }
 
-            update as user story;
+            update story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -193,14 +195,18 @@ public with sharing class StoryController {
                 SELECT Id, Room__c, Story_Title__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
+
+            // Security check: Only facilitators can delete stories
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                throw new AuraHandledException('Only facilitators can delete stories');
+            }
 
             Id roomId = story.Room__c;
             String title = story.Story_Title__c;
 
-            delete as user story;
+            delete story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -226,12 +232,17 @@ public with sharing class StoryController {
     @AuraEnabled
     public static void deleteAllStoriesByRoom(Id roomId) {
         try {
+            // Security check
+            if (!ValidationService.canManageRoom(roomId, UserInfo.getUserId())) {
+                throw new AuraHandledException('Only facilitators can delete all stories');
+            }
+
             List<User_Story__c> stories = [
-                SELECT Id FROM User_Story__c WHERE Room__c = :roomId WITH USER_MODE
+                SELECT Id FROM User_Story__c WHERE Room__c = :roomId
             ];
 
             if (!stories.isEmpty()) {
-                delete as user stories;
+                delete stories;
 
                 // Publish bulk delete event
                 PlatformEventPublisher.publishStoryEvent(
@@ -259,6 +270,11 @@ public with sharing class StoryController {
     @AuraEnabled
     public static void reorderStories(Id roomId, List<Map<String, Object>> storyOrders) {
         try {
+            // Security check
+            if (!ValidationService.canManageRoom(roomId, UserInfo.getUserId())) {
+                throw new AuraHandledException('Only facilitators can reorder stories');
+            }
+
             List<User_Story__c> storiesToUpdate = new List<User_Story__c>();
 
             for (Map<String, Object> orderData : storyOrders) {
@@ -268,7 +284,7 @@ public with sharing class StoryController {
                 ));
             }
 
-            update as user storiesToUpdate;
+            update storiesToUpdate;
 
             // Publish reorder event
             PlatformEventPublisher.publishStoryEvent(
@@ -303,7 +319,6 @@ public with sharing class StoryController {
                        Voting_Start_Time__c, Estimated_By__r.Name, CreatedDate
                 FROM User_Story__c
                 WHERE Room__c = :roomId
-                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST, CreatedDate
             ];
         } catch (Exception e) {
@@ -328,7 +343,6 @@ public with sharing class StoryController {
                        Room__r.Custom_Scale_Values__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -343,7 +357,6 @@ public with sharing class StoryController {
                            Voted_DateTime__c
                     FROM Estimation_Vote__c
                     WHERE User_Story__c = :storyId
-                    WITH USER_MODE
                     ORDER BY Voted_DateTime__c
                 ];
 
@@ -388,15 +401,21 @@ public with sharing class StoryController {
                 SELECT Id, Room__c, Story_Title__c
                 FROM User_Story__c
                 WHERE Id = :storyId
-                WITH USER_MODE
                 LIMIT 1
             ];
+
+            // Security check: Only facilitators can manage stories
+            if (!ValidationService.canManageRoom(story.Room__c, UserInfo.getUserId())) {
+                AuraHandledException ex = new AuraHandledException('Only facilitators can skip or activate stories');
+                ex.setMessage('Only facilitators can skip or activate stories');
+                throw ex;
+            }
 
             story.Status__c = status;
             if (status == 'Voting') {
                 story.Voting_Start_Time__c = Datetime.now();
             }
-            update as user story;
+            update story;
 
             String action = status == 'Voting' ? 'activated' :
                            status == 'Skipped' ? 'skipped' : 'updated';
@@ -442,7 +461,7 @@ public with sharing class StoryController {
             Integer currentOrder = 0;
             if (currentStoryId != null) {
                 User_Story__c current = [
-                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId WITH USER_MODE LIMIT 1
+                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId LIMIT 1
                 ];
                 currentOrder = current.Story_Order__c != null ?
                     (Integer) current.Story_Order__c : 0;
@@ -454,7 +473,6 @@ public with sharing class StoryController {
                 WHERE Room__c = :roomId
                 AND Status__c = 'Pending'
                 AND (Story_Order__c > :currentOrder OR Story_Order__c = null)
-                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST
                 LIMIT 1
             ];
