@@ -1,5 +1,4 @@
 import { LightningElement, track, api } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getMyRooms from '@salesforce/apex/RoomController.getMyRooms';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 
@@ -44,7 +43,7 @@ export default class RoomList extends LightningElement {
     }
 
     handleUnsubscribe() {
-        unsubscribe(this.subscription, response => {
+        unsubscribe(this.subscription, () => {
             console.log('Unsubscribed from channel: ', this.channelName);
         });
     }
@@ -135,13 +134,8 @@ export default class RoomList extends LightningElement {
         this.dispatchEvent(new CustomEvent('createroom'));
     }
 
-    showToast(title, message, variant) {
-        /*
-        this.dispatchEvent(new ShowToastEvent({
-            title,
-            message,
-            variant
-        }));
-        */
+    // eslint-disable-next-line no-unused-vars
+    showToast(_title, _message, _variant) {
+        // Toast placeholder
     }
 }

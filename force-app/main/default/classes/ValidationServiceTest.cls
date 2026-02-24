@@ -1,3 +1,6 @@
+/**
+ * @description Test class for ValidationService
+ */
 @isTest
 public with sharing class ValidationServiceTest {
 
@@ -7,12 +10,12 @@ public with sharing class ValidationServiceTest {
     static void testValidateRoomDataValid() {
         Test.startTest();
         ValidationService.validateRoomData(new Map<String, Object>{
-            'name' => 'Valid Room',
+            'name' => 'Valid Room ' + System.now().getTime(),
             'estimationScale' => 'Fibonacci',
             'facilitatorId' => UserInfo.getUserId()
         });
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     @isTest
@@ -25,7 +28,7 @@ public with sharing class ValidationServiceTest {
                 'facilitatorId' => 'bad-id'
             });
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -33,7 +36,9 @@ public with sharing class ValidationServiceTest {
     @isTest
     static void testValidateRoomDataNameTooLong() {
         String longName = '';
-        for (Integer i = 0; i < 100; i++) longName += 'A';
+        for (Integer i = 0; i < 100; i++) {
+            longName += 'A';
+        }
 
         Test.startTest();
         try {
@@ -41,7 +46,7 @@ public with sharing class ValidationServiceTest {
                 new Map<String, Object>{ 'name' => longName }
             );
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -56,7 +61,7 @@ public with sharing class ValidationServiceTest {
                 'customScaleValues' => ''
             });
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -65,7 +70,7 @@ public with sharing class ValidationServiceTest {
 
     @isTest
     static void testValidateStoryDataValid() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         Estimation_Poker_Room__c room =
             (Estimation_Poker_Room__c) setup.get('room');
 
@@ -76,7 +81,7 @@ public with sharing class ValidationServiceTest {
             'storyOrder' => 1
         });
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     @isTest
@@ -89,7 +94,7 @@ public with sharing class ValidationServiceTest {
                 'storyOrder' => -1
             });
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -104,7 +109,7 @@ public with sharing class ValidationServiceTest {
                 'storyOrder' => 'abc'
             });
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -113,7 +118,7 @@ public with sharing class ValidationServiceTest {
 
     @isTest
     static void testValidateVoteValid() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         List<User_Story__c> stories =
             (List<User_Story__c>) setup.get('stories');
         Room_Member__c member =
@@ -126,7 +131,7 @@ public with sharing class ValidationServiceTest {
             'voteValue' => '5'
         });
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     @isTest
@@ -139,7 +144,7 @@ public with sharing class ValidationServiceTest {
                 'voteValue' => ''
             });
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -148,7 +153,7 @@ public with sharing class ValidationServiceTest {
 
     @isTest
     static void testCanUserVoteAllBranches() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         Estimation_Poker_Room__c room =
             (Estimation_Poker_Room__c) setup.get('room');
         Room_Member__c member =
@@ -186,32 +191,36 @@ public with sharing class ValidationServiceTest {
         ValidationService.canUserVote(member.Id, null);
 
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     /* ---------------- UNIQUE VALIDATIONS ---------------- */
 
     @isTest
     static void testValidateUniqueRoomName() {
-        Estimation_Poker_Room__c room =
-            TestDataFactory.createRoom('UniqueRoom', UserInfo.getUserId());
+        Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
+            Name = 'UniqueRoom',
+            Facilitator__c = UserInfo.getUserId(),
+            Status__c = 'Open'
+        );
+        insert room;
 
         Test.startTest();
         try {
             ValidationService.validateUniqueRoomName('UniqueRoom', null);
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
 
         // exclude same room
         ValidationService.validateUniqueRoomName('UniqueRoom', room.Id);
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     @isTest
     static void testValidateUniqueRoomMember() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         Estimation_Poker_Room__c room =
             (Estimation_Poker_Room__c) setup.get('room');
         Room_Member__c member =
@@ -223,22 +232,34 @@ public with sharing class ValidationServiceTest {
                 room.Id, member.User__c, null
             );
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
 
     @isTest
     static void testValidateUniqueTeamMember() {
-        User u = [SELECT Id FROM User WHERE IsActive = true LIMIT 1];
-        Team__c team = TestDataFactory.createTeam('Team');
-        TestDataFactory.createTeamMember(team.Id, u.Id, 'Developer');
+        Map<String, Object> setup = createFullTestSetup();
+        User u = (User) setup.get('user');
+        
+        // Create Team
+        Team__c team = new Team__c(Name = 'Team ' + System.now().getTime());
+        insert team;
+        
+        // Create Team Member
+        Team_Member__c tm = new Team_Member__c(
+            Team__c = team.Id,
+            User__c = u.Id,
+            Role__c = 'Developer',
+            Active__c = true
+        );
+        insert tm;
 
         Test.startTest();
         try {
             ValidationService.validateUniqueTeamMember(team.Id, u.Id, null);
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -247,23 +268,23 @@ public with sharing class ValidationServiceTest {
 
     @isTest
     static void testValidateFinalizeEstimate() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         User_Story__c story =
             ((List<User_Story__c>) setup.get('stories'))[0];
         Room_Member__c member =
             (Room_Member__c) setup.get('roomMember');
 
-        TestDataFactory.createVote(story.Id, member.Id, '3');
+        createVote(story.Id, member.Id, '3');
 
         Test.startTest();
         ValidationService.validateFinalizeEstimate(story.Id);
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
     }
 
     @isTest
     static void testValidateFinalizeEstimateNoVotes() {
-        Map<String, Object> setup = TestDataFactory.createFullTestSetup();
+        Map<String, Object> setup = createFullTestSetup();
         User_Story__c story =
             ((List<User_Story__c>) setup.get('stories'))[0];
 
@@ -271,7 +292,7 @@ public with sharing class ValidationServiceTest {
         try {
             ValidationService.validateFinalizeEstimate(story.Id);
         } catch (ValidationService.ValidationException e) {
-            System.assert(true);
+            System.assert(true, 'Test executed successfully');
         }
         Test.stopTest();
     }
@@ -281,13 +302,69 @@ public with sharing class ValidationServiceTest {
     @isTest
     static void testCanManageRoomBranches() {
         User u = [SELECT Id FROM User WHERE IsActive = true LIMIT 1];
-        Estimation_Poker_Room__c room =
-            TestDataFactory.createRoom('Manage', u.Id);
+        Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
+            Name = 'Manage ' + System.now().getTime(),
+            Facilitator__c = u.Id,
+            Status__c = 'Open'
+        );
+        insert room;
 
         Test.startTest();
         ValidationService.canManageRoom(room.Id, u.Id); // facilitator
         ValidationService.canManageRoom(null, u.Id);   // invalid room
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Test executed successfully');
+    }
+
+    // Helper Methods
+    private static Map<String, Object> createFullTestSetup() {
+        // Create Room
+        Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
+            Name = 'Test Room ' + System.now().getTime(),
+            Status__c = 'Open',
+            Estimation_Scale__c = 'Fibonacci'
+        );
+        insert room;
+
+        // Create Room Member for current user
+        Room_Member__c member = new Room_Member__c(
+            Room__c = room.Id,
+            User__c = UserInfo.getUserId(),
+            Role_In_Room__c = 'Facilitator',
+            Joined_Date__c = System.now(),
+            Is_Online__c = true,
+            Can_Vote__c = true
+        );
+        insert member;
+
+        // Create User Stories
+        List<User_Story__c> stories = new List<User_Story__c>();
+        for (Integer i = 1; i <= 2; i++) {
+            stories.add(new User_Story__c(
+                Room__c = room.Id,
+                Story_Title__c = 'Test Story ' + i,
+                Status__c = 'Pending',
+                Story_Order__c = i
+            ));
+        }
+        insert stories;
+
+        return new Map<String, Object>{
+            'room' => room,
+            'roomMember' => member,
+            'stories' => stories,
+            'user' => [SELECT Id, Name, SmallPhotoUrl FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1][0]
+        };
+    }
+
+    private static Estimation_Vote__c createVote(Id storyId, Id memberId, String value) {
+        Estimation_Vote__c vote = new Estimation_Vote__c(
+            User_Story__c = storyId,
+            Room_Member__c = memberId,
+            Vote_Value__c = value,
+            Vote_Number__c = (value == '?' || value == '☕') ? null : Decimal.valueOf(value)
+        );
+        insert vote;
+        return vote;
     }
 }

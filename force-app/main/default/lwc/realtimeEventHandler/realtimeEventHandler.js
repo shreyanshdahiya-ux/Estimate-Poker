@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
-import { subscribe, unsubscribe, onError, setDebugFlag, isEmpEnabled } from 'lightning/empApi';
+import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 
 export default class RealtimeEventHandler extends LightningElement {
     @api showDebug = false;
@@ -34,7 +34,6 @@ export default class RealtimeEventHandler extends LightningElement {
     }
 
     set roomId(value) {
-        const oldValue = this._roomId;
         this._roomId = value;
 
         // If we haven't subscribed yet, do it now.
@@ -181,8 +180,6 @@ export default class RealtimeEventHandler extends LightningElement {
         this._isSubscribed = false;
 
         try {
-            const unsubscribePromises = [];
-
             // Helper function to safely unsubscribe
             const safeUnsubscribe = async (subscription, name) => {
                 if (subscription && subscription.callback) {
@@ -384,7 +381,7 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'timer_started':
                 case 'timer_paused':
                 case 'timer_resumed':
-                case 'timer_stopped':
+                case 'timer_stopped': {
                     const eventName = action.replace('_', '');
                     this.dispatchEvent(new CustomEvent(eventName, {
                         detail: payload,
@@ -392,6 +389,7 @@ export default class RealtimeEventHandler extends LightningElement {
                         composed: true
                     }));
                     break;
+                }
 
                 default:
                     this.logDebug('Unknown room action:', action);

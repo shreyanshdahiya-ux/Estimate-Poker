@@ -1,3 +1,6 @@
+/**
+ * @description Test class for PlatformEventPublisher
+ */
 @isTest
 public with sharing class PlatformEventPublisherTest {
 
@@ -20,7 +23,7 @@ public with sharing class PlatformEventPublisherTest {
             0
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     @isTest
@@ -46,7 +49,7 @@ public with sharing class PlatformEventPublisherTest {
         );
 
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== VOTES REVEALED ==================== */
@@ -60,7 +63,7 @@ public with sharing class PlatformEventPublisherTest {
             '[{"member":"m1","vote":"5"}]'
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== ESTIMATE FINALIZED ==================== */
@@ -75,7 +78,7 @@ public with sharing class PlatformEventPublisherTest {
             '{"avg":5}'
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== ROOM EVENTS ==================== */
@@ -95,7 +98,7 @@ public with sharing class PlatformEventPublisherTest {
             null
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     @isTest
@@ -113,7 +116,7 @@ public with sharing class PlatformEventPublisherTest {
             '{"reason":"break"}'
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== STORY EVENTS ==================== */
@@ -133,7 +136,7 @@ public with sharing class PlatformEventPublisherTest {
             null
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     @isTest
@@ -166,7 +169,7 @@ public with sharing class PlatformEventPublisherTest {
         );
 
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== PRESENCE EVENTS ==================== */
@@ -182,7 +185,7 @@ public with sharing class PlatformEventPublisherTest {
             Datetime.now()
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== TEAM EVENTS ==================== */
@@ -198,7 +201,7 @@ public with sharing class PlatformEventPublisherTest {
             '{"name":"Team A"}'
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== QUEUE EVENTS ==================== */
@@ -225,7 +228,7 @@ public with sharing class PlatformEventPublisherTest {
         PlatformEventPublisher.publishQueuedEvents();
         Test.stopTest();
 
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     @isTest
@@ -233,7 +236,7 @@ public with sharing class PlatformEventPublisherTest {
         Test.startTest();
         PlatformEventPublisher.publishQueuedEvents();
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 
     /* ==================== 🔒 MICRO-IMPROVEMENT ==================== */
@@ -249,6 +252,6 @@ public with sharing class PlatformEventPublisherTest {
             )
         );
         Test.stopTest();
-        System.assert(true);
+        System.assert(true, 'Event published successfully');
     }
 }

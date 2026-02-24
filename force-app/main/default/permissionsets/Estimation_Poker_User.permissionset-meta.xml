@@ -332,6 +332,10 @@
         <visibility>Visible</visibility>
     </tabSettings>
     <tabSettings>
+        <tab>Estimation_Room</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>Team__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>

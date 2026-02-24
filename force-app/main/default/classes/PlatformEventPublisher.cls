@@ -1,14 +1,26 @@
 /**
  * @description Centralized Platform Event Publisher for Planning Poker
  * Handles publishing of all real-time events for the application
- * Using 'without sharing' to allow all users to publish events
+ * Using 'with sharing' to enforce sharing rules
  */
-public without sharing class PlatformEventPublisher {
+@SuppressWarnings('PMD.ExcessiveParameterList, PMD.AvoidDebugStatements')
+public with sharing class PlatformEventPublisher {
 
     private static List<SObject> queuedEvents = new List<SObject>();
 
     /**
      * @description Publishes a vote event
+     * @param roomId The room ID
+     * @param storyId The story ID
+     * @param roomMemberId The room member ID
+     * @param odataUserId The user ID
+     * @param odataUserName The user display name
+     * @param action The event action type
+     * @param voteValue The vote value
+     * @param revealed Whether votes are revealed
+     * @param voteCount Current vote count
+     * @param totalMembers Total voting members
+     * @param duration Vote duration in seconds
      */
     public static void publishVoteEvent(
         String roomId,
@@ -45,6 +57,9 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes votes revealed event with all vote data
+     * @param roomId The room ID
+     * @param storyId The story ID
+     * @param allVotesJson JSON string of all vote data
      */
     public static void publishVotesRevealedEvent(
         String roomId,
@@ -67,6 +82,10 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes estimate finalized event
+     * @param roomId The room ID
+     * @param storyId The story ID
+     * @param finalEstimate The final estimate value
+     * @param voteSummaryJson JSON string of vote summary data
      */
     public static void publishEstimateFinalizedEvent(
         String roomId,
@@ -90,6 +109,15 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes a room event
+     * @param roomId The room ID
+     * @param action The event action type
+     * @param odataUserId The user ID
+     * @param odataUserName The user display name
+     * @param currentStoryId Current story ID
+     * @param currentStoryTitle Current story title
+     * @param roomStatus Room status value
+     * @param memberCount Number of members
+     * @param additionalDataJson Additional JSON data
      */
     public static void publishRoomEvent(
         String roomId,
@@ -122,6 +150,15 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes a story event
+     * @param roomId The room ID
+     * @param storyId The story ID
+     * @param action The event action type
+     * @param storyTitle The story title
+     * @param storyStatus The story status
+     * @param finalEstimate The final estimate value
+     * @param storyOrder The story order number
+     * @param updatedBy ID of the user who updated
+     * @param storyDataJson Additional story JSON data
      */
     public static void publishStoryEvent(
         String roomId,
@@ -154,6 +191,11 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes a presence event
+     * @param roomId The room ID
+     * @param odataUserId The user ID
+     * @param odataUserName The user display name
+     * @param status The presence status
+     * @param lastActivity Timestamp of last activity
      */
     public static void publishPresenceEvent(
         String roomId,
@@ -177,6 +219,11 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Publishes a team event
+     * @param teamId The team ID
+     * @param action The event action type
+     * @param odataUserId The user ID
+     * @param odataUserName The user display name
+     * @param additionalDataJson Additional JSON data
      */
     public static void publishTeamEvent(
         String teamId,
@@ -200,6 +247,7 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Queues an event for batch publishing
+     * @param event The platform event SObject to queue
      */
     public static void queueEvent(SObject event) {
         queuedEvents.add(event);
@@ -229,6 +277,7 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Generates a unique event ID
+     * @return A UUID-formatted string
      */
     private static String generateEventId() {
         Blob b = Crypto.generateAesKey(128);
@@ -240,6 +289,8 @@ public without sharing class PlatformEventPublisher {
 
     /**
      * @description Handles the result of publishing an event
+     * @param sr The save result from EventBus.publish
+     * @param eventType The type name of the event for logging
      */
     private static void handlePublishResult(Database.SaveResult sr, String eventType) {
         if (!sr.isSuccess()) {

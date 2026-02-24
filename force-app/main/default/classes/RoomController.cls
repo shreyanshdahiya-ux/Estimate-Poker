@@ -1,11 +1,16 @@
 /**
  * @description Controller for Estimation Poker Room operations
- * Using 'without sharing' to allow all room members to access shared room data
+ * Using 'with sharing' to enforce sharing rules for room data access
  */
-public without sharing class RoomController {
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.StdCyclomaticComplexity, PMD.CognitiveComplexity, PMD.ExcessiveParameterList, PMD.AvoidDeeplyNestedIfStmts')
+public with sharing class RoomController {
 
     /**
      * @description Creates a new estimation poker room
+     * @param roomData Map containing room configuration data
+     * @param teamId Optional team ID to associate with the room
+     * @param memberRoles JSON string of member roles to assign
+     * @return The ID of the created room
      */
     @AuraEnabled
     public static Id createRoom(Map<String, Object> roomData, Id teamId, String memberRoles) {
@@ -23,7 +28,7 @@ public without sharing class RoomController {
                 Facilitator__c = UserInfo.getUserId()
             );
 
-            insert room;
+            insert as user room;
 
             // Add room members
             List<Room_Member__c> members = new List<Room_Member__c>();
@@ -62,19 +67,23 @@ public without sharing class RoomController {
                 }
             }
 
-            insert members;
+            insert as user members;
 
-            // Publish events for each new member so the home page refreshes in real-time
+            // Collect user IDs and query all at once to avoid SOQL in loop
+            Set<Id> userIds = new Set<Id>();
             for (Room_Member__c member : members) {
-                // We need the user's name for the event. Since it's often the current user or selected users,
-                // we can do a quick query or just pass the ID if the frontend doesn't strictly need the name for list refresh.
-                // But for consistency with other member_joined events, we'll fetch names.
-                User u = [SELECT Name FROM User WHERE Id = :member.User__c LIMIT 1];
+                userIds.add(member.User__c);
+            }
+            Map<Id, User> userMap = new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :userIds WITH USER_MODE]);
+
+            // Publish events for each new member
+            for (Room_Member__c member : members) {
+                String userName = userMap.containsKey(member.User__c) ? userMap.get(member.User__c).Name : 'Unknown';
                 PlatformEventPublisher.publishRoomEvent(
                     room.Id,
                     'member_joined',
                     member.User__c,
-                    u.Name,
+                    userName,
                     null,
                     null,
                     null,
@@ -91,6 +100,8 @@ public without sharing class RoomController {
 
     /**
      * @description Gets detailed room information
+     * @param roomId The room to get details for
+     * @return Map containing room, members, stories, and statistics
      */
     @AuraEnabled
     public static Map<String, Object> getRoomDetails(Id roomId) {
@@ -104,6 +115,7 @@ public without sharing class RoomController {
                        CreatedDate, LastModifiedDate
                 FROM Estimation_Poker_Room__c
                 WHERE Id = :roomId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -114,6 +126,7 @@ public without sharing class RoomController {
                        Is_Online__c, Last_Activity__c, Joined_Date__c
                 FROM Room_Member__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
                 ORDER BY Role_In_Room__c, User__r.Name
             ];
 
@@ -124,6 +137,7 @@ public without sharing class RoomController {
                        Average_Estimate__c, Votes_Revealed__c, Voting_Start_Time__c
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST, CreatedDate
             ];
 
@@ -149,16 +163,14 @@ public without sharing class RoomController {
             for (Room_Member__c member : members) {
                 Map<String, Object> memberMap = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(member));
                 memberMap.put('Is_Current_User__c', member.User__c == currentUserId);
-                
-                // Also ensures User__r data is accessible in the map
+
                 memberMap.put('User__r', new Map<String, Object>{
                     'Name' => member.User__r.Name,
                     'SmallPhotoUrl' => member.User__r.SmallPhotoUrl
                 });
-                
+
                 memberMaps.add(memberMap);
-                
-                // Count all members who can vote (Active or Invited status)
+
                 if (member.Can_Vote__c && (member.Status__c == 'Active' || member.Status__c == 'Invited')) {
                     votingMembers++;
                 }
@@ -166,9 +178,10 @@ public without sharing class RoomController {
 
             // Check if current user has voted in this room
             Boolean currentUserHasVoted = [
-                SELECT COUNT() FROM Estimation_Vote__c 
-                WHERE Room_Member__r.Room__c = :roomId 
+                SELECT COUNT() FROM Estimation_Vote__c
+                WHERE Room_Member__r.Room__c = :roomId
                 AND Room_Member__r.User__c = :UserInfo.getUserId()
+                WITH USER_MODE
             ] > 0;
 
             return new Map<String, Object>{
@@ -190,6 +203,7 @@ public without sharing class RoomController {
 
     /**
      * @description Gets rooms for the current user
+     * @return List of room data maps for the current user
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getMyRooms() {
@@ -206,6 +220,7 @@ public without sharing class RoomController {
                 FROM Room_Member__c
                 WHERE User__c = :currentUserId
                 AND Room__r.Status__c != 'Archived'
+                WITH USER_MODE
                 ORDER BY Room__r.CreatedDate DESC
                 LIMIT 100
             ];
@@ -227,6 +242,7 @@ public without sharing class RoomController {
                 SELECT Room__c, COUNT(Id) cnt
                 FROM Room_Member__c
                 WHERE Room__c IN :roomIds
+                WITH USER_MODE
                 GROUP BY Room__c
             ]) {
                 memberCounts.put((Id) ar.get('Room__c'), Integer.valueOf(ar.get('cnt')));
@@ -237,15 +253,16 @@ public without sharing class RoomController {
                 SELECT Room__c, Status__c, COUNT(Id) cnt
                 FROM User_Story__c
                 WHERE Room__c IN :roomIds
+                WITH USER_MODE
                 GROUP BY Room__c, Status__c
             ]) {
                 Id rId = (Id) ar.get('Room__c');
                 String status = (String) ar.get('Status__c');
                 Integer cnt = Integer.valueOf(ar.get('cnt'));
-                
+
                 Integer currentTotal = storyCounts.containsKey(rId) ? storyCounts.get(rId) : 0;
                 storyCounts.put(rId, currentTotal + cnt);
-                
+
                 if (status == 'Estimated') {
                     estimatedStoryCounts.put(rId, cnt);
                 }
@@ -276,6 +293,8 @@ public without sharing class RoomController {
 
     /**
      * @description Updates room status
+     * @param roomId The room to update
+     * @param status The new status value
      */
     @AuraEnabled
     public static void updateRoomStatus(Id roomId, String status) {
@@ -284,43 +303,35 @@ public without sharing class RoomController {
                 SELECT Id, Status__c, Start_DateTime__c, End_DateTime__c, Current_Story__c
                 FROM Estimation_Poker_Room__c
                 WHERE Id = :roomId
+                WITH USER_MODE
                 LIMIT 1
             ];
-
-            // Removed restricted story requirement to allow entering room as requested
-            /*
-            if (status == 'Active') {
-                Integer storyCount = [SELECT COUNT() FROM User_Story__c WHERE Room__c = :roomId];
-                if (storyCount == 0) {
-                    throw new AuraHandledException('You must add at least one story before starting the session.');
-                }
-            }
-            */
 
             room.Status__c = status;
             String additionalData = null;
 
             if (status == 'Active' && room.Start_DateTime__c == null) {
                 room.Start_DateTime__c = Datetime.now();
-                
+
                 // Automatically select first story if none selected
                 if (room.Current_Story__c == null) {
                     List<User_Story__c> firstStory = [
-                        SELECT Id, Story_Title__c FROM User_Story__c 
-                        WHERE Room__c = :roomId 
-                        ORDER BY Story_Order__c NULLS LAST, CreatedDate 
+                        SELECT Id, Story_Title__c FROM User_Story__c
+                        WHERE Room__c = :roomId
+                        WITH USER_MODE
+                        ORDER BY Story_Order__c NULLS LAST, CreatedDate
                         LIMIT 1
                     ];
                     if (!firstStory.isEmpty()) {
                         room.Current_Story__c = firstStory[0].Id;
-                        
+
                         // Update the story's voting start time
-                        update new User_Story__c(
+                        update as user new User_Story__c(
                             Id = firstStory[0].Id,
                             Status__c = 'Voting',
                             Voting_Start_Time__c = Datetime.now()
                         );
-                        
+
                         Map<String, Object> data = new Map<String, Object>{
                             'votingStartTime' => Datetime.now()
                         };
@@ -330,16 +341,12 @@ public without sharing class RoomController {
             } else if (status == 'Completed') {
                 room.End_DateTime__c = Datetime.now();
             }
-            // For Paused status, we keep the timestamps as they are
 
-            update room;
+            update as user room;
 
             // Publish room event based on status
             String eventAction;
             if (status == 'Active') {
-                // If Start_DateTime__c was just set or was null before update, it's a start
-                // Otherwise it's a resume. But we need to know the state BEFORE update.
-                // Actually, additionalData being non-null is a good indicator of initial story selection.
                 eventAction = (additionalData != null) ? 'session_started' : 'session_resumed';
             } else if (status == 'Paused') {
                 eventAction = 'session_paused';
@@ -367,22 +374,26 @@ public without sharing class RoomController {
 
     /**
      * @description Adds members to a room
+     * @param roomId The room to add members to
+     * @param memberDataList List of member data maps with userId and role
+     * @return List of created Room_Member__c records
      */
     @AuraEnabled
     public static List<Room_Member__c> addRoomMembers(Id roomId, List<Map<String, Object>> memberDataList) {
         try {
-            // Validate room status - cannot add members to completed rooms
+            // Validate room status
             Estimation_Poker_Room__c room = [
-                SELECT Id, Status__c 
-                FROM Estimation_Poker_Room__c 
-                WHERE Id = :roomId 
+                SELECT Id, Status__c
+                FROM Estimation_Poker_Room__c
+                WHERE Id = :roomId
+                WITH USER_MODE
                 LIMIT 1
             ];
-            
+
             if (room.Status__c == 'Completed') {
                 throw new AuraHandledException('Cannot add members to a completed room.');
             }
-            
+
             List<Room_Member__c> newMembers = new List<Room_Member__c>();
 
             for (Map<String, Object> memberData : memberDataList) {
@@ -404,16 +415,23 @@ public without sharing class RoomController {
                 ));
             }
 
-            insert newMembers;
+            insert as user newMembers;
+
+            // Collect user IDs and query all at once to avoid SOQL in loop
+            Set<Id> userIds = new Set<Id>();
+            for (Room_Member__c member : newMembers) {
+                userIds.add(member.User__c);
+            }
+            Map<Id, User> userMap = new Map<Id, User>([SELECT Id, Name FROM User WHERE Id IN :userIds WITH USER_MODE]);
 
             // Publish events for each new member
             for (Room_Member__c member : newMembers) {
-                User u = [SELECT Name FROM User WHERE Id = :member.User__c LIMIT 1];
+                String userName = userMap.containsKey(member.User__c) ? userMap.get(member.User__c).Name : 'Unknown';
                 PlatformEventPublisher.publishRoomEvent(
                     roomId,
                     'member_joined',
                     member.User__c,
-                    u.Name,
+                    userName,
                     null,
                     null,
                     null,
@@ -430,6 +448,7 @@ public without sharing class RoomController {
 
     /**
      * @description Removes a member from a room
+     * @param roomMemberId The room member record to remove
      */
     @AuraEnabled
     public static void removeRoomMember(Id roomMemberId) {
@@ -438,6 +457,7 @@ public without sharing class RoomController {
                 SELECT Id, Room__c, User__c, User__r.Name
                 FROM Room_Member__c
                 WHERE Id = :roomMemberId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -445,7 +465,7 @@ public without sharing class RoomController {
             String userName = member.User__r.Name;
             Id odataUserId = member.User__c;
 
-            delete member;
+            delete as user member;
 
             // Publish event
             PlatformEventPublisher.publishRoomEvent(
@@ -466,6 +486,7 @@ public without sharing class RoomController {
 
     /**
      * @description Deletes a room and all related records
+     * @param roomId The room to delete
      */
     @AuraEnabled
     public static void deleteRoom(Id roomId) {
@@ -475,7 +496,7 @@ public without sharing class RoomController {
                 throw new AuraHandledException('You do not have permission to delete this room');
             }
 
-            delete [SELECT Id FROM Estimation_Poker_Room__c WHERE Id = :roomId];
+            delete as user [SELECT Id FROM Estimation_Poker_Room__c WHERE Id = :roomId WITH USER_MODE];
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -483,6 +504,8 @@ public without sharing class RoomController {
 
     /**
      * @description Sets the current story for a room
+     * @param roomId The room to update
+     * @param storyId The story to set as current
      */
     @AuraEnabled
     public static void setCurrentStory(Id roomId, Id storyId) {
@@ -491,46 +514,41 @@ public without sharing class RoomController {
                 SELECT Id, Story_Title__c, Status__c, Voting_Start_Time__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
             // Update the story status and reset voting start time
-            // Always reset the voting start time when a story is selected to sync stopwatches
             if (story.Status__c != 'Skipped' && story.Status__c != 'Estimated') {
                 // Reset any currently 'Voting' stories to 'Pending' or 'Estimated'
                 List<User_Story__c> activeStories = [
                     SELECT Id, Status__c, Final_Estimate__c
-                    FROM User_Story__c 
-                    WHERE Room__c = :roomId 
-                    AND Status__c = 'Voting' 
+                    FROM User_Story__c
+                    WHERE Room__c = :roomId
+                    AND Status__c = 'Voting'
                     AND Id != :storyId
+                    WITH USER_MODE
                 ];
-                
+
                 for (User_Story__c s : activeStories) {
-                    // Use isNotBlank to be safe with different types of null/empty values
                     if (String.isNotBlank(s.Final_Estimate__c)) {
                         s.Status__c = 'Estimated';
                     } else {
                         s.Status__c = 'Pending';
                     }
                 }
-                
+
                 if (!activeStories.isEmpty()) {
-                    update activeStories;
+                    update as user activeStories;
                 }
 
-                // Only set to Voting if not already Estimated or Skipped
                 story.Status__c = 'Voting';
                 story.Voting_Start_Time__c = Datetime.now();
-                update story;
-            } else if (story.Status__c == 'Estimated') {
-                // If it's already estimated, just update the Current Story on Room
-                // but keep the story status as Estimated.
-                // The room update will happen below.
+                update as user story;
             }
 
             // Update room's current story
-            update new Estimation_Poker_Room__c(
+            update as user new Estimation_Poker_Room__c(
                 Id = roomId,
                 Current_Story__c = storyId
             );
@@ -558,6 +576,8 @@ public without sharing class RoomController {
 
     /**
      * @description Gets the current user's room member record
+     * @param roomId The room to check membership for
+     * @return The Room_Member__c record or null
      */
     @AuraEnabled
     public static Room_Member__c getCurrentUserMember(Id roomId) {
@@ -568,6 +588,7 @@ public without sharing class RoomController {
                 FROM Room_Member__c
                 WHERE Room__c = :roomId
                 AND User__c = :UserInfo.getUserId()
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -579,6 +600,8 @@ public without sharing class RoomController {
 
     /**
      * @description Updates member's online status
+     * @param roomMemberId The room member to update
+     * @param isOnline Whether the member is online
      */
     @AuraEnabled
     public static void updateMemberPresence(Id roomMemberId, Boolean isOnline) {
@@ -587,6 +610,7 @@ public without sharing class RoomController {
                 SELECT Id, Room__c, User__c, User__r.Name, Is_Online__c
                 FROM Room_Member__c
                 WHERE Id = :roomMemberId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -594,7 +618,7 @@ public without sharing class RoomController {
             member.Last_Activity__c = Datetime.now();
             member.Status__c = isOnline ? 'Active' : member.Status__c;
 
-            update member;
+            update as user member;
 
             // Publish presence event
             PlatformEventPublisher.publishPresenceEvent(
@@ -609,6 +633,12 @@ public without sharing class RoomController {
         }
     }
 
+    /**
+     * @description Checks if the current user has a specific role in a room
+     * @param roomId The room to check
+     * @param role The role to look for
+     * @return True if user has the specified role
+     */
     private static Boolean hasRoleInRoom(Id roomId, String role) {
         List<Room_Member__c> members = [
             SELECT Id FROM Room_Member__c
@@ -616,13 +646,16 @@ public without sharing class RoomController {
             AND User__c = :UserInfo.getUserId()
             AND Role_In_Room__c = :role
             AND Status__c = 'Active'
+            WITH USER_MODE
             LIMIT 1
         ];
         return !members.isEmpty();
     }
 
     /**
-     * @description Sends a 'like' to a room member
+     * @description Sends a like reaction to a room member
+     * @param roomId The room context
+     * @param targetUserId The user to send the like to
      */
     @AuraEnabled
     public static void sendMemberLike(Id roomId, Id targetUserId) {

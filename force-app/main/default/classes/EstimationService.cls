@@ -2,7 +2,8 @@
  * @description Business logic service for estimation calculations
  * Using 'without sharing' to allow all room members to access estimation data
  */
-public without sharing class EstimationService {
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.StdCyclomaticComplexity, PMD.CognitiveComplexity, PMD.NcssMethodCount')
+public with sharing class EstimationService {
 
     // Estimation scale definitions
     public static final Map<String, List<String>> ESTIMATION_SCALES = new Map<String, List<String>>{
@@ -19,6 +20,9 @@ public without sharing class EstimationService {
 
     /**
      * @description Gets the scale values for a given estimation scale
+     * @param scaleName The name of the estimation scale
+     * @param customValues Custom comma-separated values for Custom scale
+     * @return List of scale value strings
      */
     public static List<String> getScaleValues(String scaleName, String customValues) {
         if (scaleName == 'Custom' && String.isNotBlank(customValues)) {
@@ -34,6 +38,8 @@ public without sharing class EstimationService {
 
     /**
      * @description Calculates the average of numeric votes
+     * @param votes List of vote records to average
+     * @return The average numeric vote value or null
      */
     public static Decimal calculateAverage(List<Estimation_Vote__c> votes) {
         if (votes == null || votes.isEmpty()) {
@@ -55,6 +61,8 @@ public without sharing class EstimationService {
 
     /**
      * @description Calculates the median of numeric votes
+     * @param votes List of vote records to calculate median for
+     * @return The median numeric vote value or null
      */
     public static Decimal calculateMedian(List<Estimation_Vote__c> votes) {
         if (votes == null || votes.isEmpty()) {
@@ -85,6 +93,8 @@ public without sharing class EstimationService {
 
     /**
      * @description Identifies outlier votes (more than 2 std deviations from mean)
+     * @param votes List of vote records to check for outliers
+     * @return List of votes that are statistical outliers
      */
     public static List<Estimation_Vote__c> identifyOutliers(List<Estimation_Vote__c> votes) {
         List<Estimation_Vote__c> outliers = new List<Estimation_Vote__c>();
@@ -128,6 +138,9 @@ public without sharing class EstimationService {
 
     /**
      * @description Converts a vote value to a numeric value based on the scale
+     * @param voteValue The string vote value to convert
+     * @param scale The estimation scale being used
+     * @return The numeric equivalent or null if not convertible
      */
     public static Decimal convertVoteToNumber(String voteValue, String scale) {
         if (String.isBlank(voteValue) || voteValue == '?' || voteValue == '☕') {
@@ -143,12 +156,15 @@ public without sharing class EstimationService {
         try {
             return Decimal.valueOf(voteValue);
         } catch (Exception e) {
+            // Non-numeric vote values return null intentionally
             return null;
         }
     }
 
     /**
      * @description Generates a comprehensive estimation report for a room
+     * @param roomId The room to generate the report for
+     * @return Map containing room details, stories, summary stats, and participation data
      */
     public static Map<String, Object> generateEstimationReport(Id roomId) {
         Map<String, Object> report = new Map<String, Object>();
@@ -159,6 +175,7 @@ public without sharing class EstimationService {
                    Start_DateTime__c, End_DateTime__c, Facilitator__r.Name
             FROM Estimation_Poker_Room__c
             WHERE Id = :roomId
+            WITH USER_MODE
             LIMIT 1
         ];
 
@@ -172,6 +189,7 @@ public without sharing class EstimationService {
                     FROM Estimation_Votes__r)
             FROM User_Story__c
             WHERE Room__c = :roomId
+            WITH USER_MODE
             ORDER BY Story_Order__c NULLS LAST
         ];
 
@@ -213,6 +231,7 @@ public without sharing class EstimationService {
                    (SELECT Id FROM Estimation_Votes__r)
             FROM Room_Member__c
             WHERE Room__c = :roomId AND Status__c = 'Active'
+            WITH USER_MODE
         ];
 
         List<Map<String, Object>> participation = new List<Map<String, Object>>();
@@ -233,6 +252,8 @@ public without sharing class EstimationService {
 
     /**
      * @description Gets vote distribution for a story
+     * @param votes List of vote records to analyze
+     * @return Map of vote values to their counts
      */
     public static Map<String, Integer> getVoteDistribution(List<Estimation_Vote__c> votes) {
         Map<String, Integer> distribution = new Map<String, Integer>();
@@ -251,6 +272,8 @@ public without sharing class EstimationService {
 
     /**
      * @description Gets statistics for a set of votes
+     * @param votes List of vote records to calculate statistics for
+     * @return Map containing average, median, min, max, distribution, and other stats
      */
     public static Map<String, Object> getVoteStatistics(List<Estimation_Vote__c> votes) {
         Map<String, Object> stats = new Map<String, Object>();

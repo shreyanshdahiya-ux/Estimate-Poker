@@ -1,5 +1,4 @@
 import { LightningElement, api, track } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import submitVote from '@salesforce/apex/VotingController.submitVote';
 import getVotesForStory from '@salesforce/apex/VotingController.getVotesForStory';
 import revealVotes from '@salesforce/apex/VotingController.revealVotes';
@@ -513,9 +512,9 @@ export default class VotingPanel extends LightningElement {
             case 'votes_revealed':
                 this.handleVotesRevealedEvent(eventData);
                 break;
-            case 'votes_reset':
+            case 'votes_reset': {
                 let resetStartTime = null;
-                if (eventData.Data__c) { // Fixed: changed payload to eventData
+                if (eventData.Data__c) {
                     try {
                         const data = JSON.parse(eventData.Data__c);
                         resetStartTime = data.votingStartTime;
@@ -525,6 +524,7 @@ export default class VotingPanel extends LightningElement {
                 }
                 this.handleVotesResetEvent(resetStartTime);
                 break;
+            }
             case 'estimate_finalized':
                 this.handleEstimateFinalizedEvent(eventData);
                 break;
@@ -918,13 +918,8 @@ export default class VotingPanel extends LightningElement {
         }
     }
 
-    showToast(title, message, variant) {
-        /*
-        this.dispatchEvent(new ShowToastEvent({
-            title,
-            message,
-            variant
-        }));
-        */
+    // eslint-disable-next-line no-unused-vars
+    showToast(_title, _message, _variant) {
+        // Toast placeholder - ShowToastEvent not available in all contexts
     }
 }

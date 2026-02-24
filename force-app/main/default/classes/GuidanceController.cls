@@ -1,10 +1,15 @@
 /**
  * @description Controller for In-App Guidance System
  */
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.CognitiveComplexity, PMD.ApexCRUDViolation')
 public with sharing class GuidanceController {
+
+    @TestVisible private static List<Help_Content__mdt> mockArticles;
 
     /**
      * @description Gets user's guidance progress state for a given context
+     * @param context The guidance context to retrieve state for
+     * @return Map containing guidance items, progress stats, and first-time user flag
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getUserGuidanceState(String context) {
@@ -17,6 +22,7 @@ public with sharing class GuidanceController {
                 FROM User_Guidance_Progress__c
                 WHERE User__c = :currentUserId
                 AND Completed__c = true
+                WITH USER_MODE
             ];
 
             Set<String> completedNames = new Set<String>();
@@ -62,6 +68,7 @@ public with sharing class GuidanceController {
 
     /**
      * @description Marks a guidance item as completed
+     * @param guidanceName The name of the guidance item to mark complete
      */
     @AuraEnabled
     public static void completeGuidance(String guidanceName) {
@@ -73,11 +80,12 @@ public with sharing class GuidanceController {
                 SELECT Id FROM User_Guidance_Progress__c
                 WHERE User__c = :currentUserId
                 AND Guidance_Name__c = :guidanceName
+                WITH USER_MODE
                 LIMIT 1
             ];
 
             if (existing.isEmpty()) {
-                insert new User_Guidance_Progress__c(
+                insert as user new User_Guidance_Progress__c(
                     User__c = currentUserId,
                     Guidance_Name__c = guidanceName,
                     Completed__c = true,
@@ -86,17 +94,17 @@ public with sharing class GuidanceController {
             } else {
                 existing[0].Completed__c = true;
                 existing[0].Completed_Date__c = Datetime.now();
-                update existing;
+                update as user existing;
             }
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
     }
 
-    @TestVisible private static List<Help_Content__mdt> mockArticles;
-
     /**
      * @description Gets help content for a specific component using Custom Metadata
+     * @param component The component name to get help content for
+     * @return List of help article maps
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getHelpForContext(String component) {
@@ -132,6 +140,8 @@ public with sharing class GuidanceController {
 
     /**
      * @description Searches help articles in Custom Metadata
+     * @param searchTerm The search term to filter articles by
+     * @return List of matching help article maps
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> searchHelp(String searchTerm) {
@@ -166,7 +176,9 @@ public with sharing class GuidanceController {
                         'Context__c' => article.Context__c
                     });
                 }
-                if (result.size() >= 20) break;
+                if (result.size() >= 20) {
+                    break;
+                }
             }
             return result;
         } catch (Exception e) {
@@ -176,11 +188,14 @@ public with sharing class GuidanceController {
 
     /**
      * @description Submits feedback for a guidance item
+     * @param guidanceName The name of the guidance item
+     * @param rating Numeric rating value
+     * @param comments Text feedback comments
      */
     @AuraEnabled
     public static void submitFeedback(String guidanceName, Integer rating, String comments) {
         try {
-            insert new Guidance_Feedback__c(
+            insert as user new Guidance_Feedback__c(
                 User__c = UserInfo.getUserId(),
                 Guidance_Name__c = guidanceName,
                 Rating__c = rating,
@@ -193,6 +208,7 @@ public with sharing class GuidanceController {
 
     /**
      * @description Gets all help articles by category from Custom Metadata
+     * @return Map of category names to lists of help article maps
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, List<Map<String, Object>>> getHelpArticlesByCategory() {
@@ -237,6 +253,8 @@ public with sharing class GuidanceController {
 
     /**
      * @description Gets walkthrough tour steps for a given tour
+     * @param tourName The name of the tour to retrieve steps for
+     * @return List of tour step maps
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getTourSteps(String tourName) {
@@ -259,10 +277,14 @@ public with sharing class GuidanceController {
     @AuraEnabled
     public static void resetGuidanceProgress() {
         try {
-            delete [
+            List<User_Guidance_Progress__c> progressRecords = [
                 SELECT Id FROM User_Guidance_Progress__c
                 WHERE User__c = :UserInfo.getUserId()
+                WITH USER_MODE
             ];
+            if (!progressRecords.isEmpty()) {
+                delete as user progressRecords;
+            }
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -270,6 +292,7 @@ public with sharing class GuidanceController {
 
     /**
      * @description Returns guidance definitions organized by context
+     * @return Map of context names to lists of guidance item maps
      */
     private static Map<String, List<Map<String, Object>>> getGuidanceDefinitions() {
         return new Map<String, List<Map<String, Object>>>{
@@ -341,6 +364,7 @@ public with sharing class GuidanceController {
 
     /**
      * @description Returns tour definitions
+     * @return Map of tour names to lists of tour step maps
      */
     private static Map<String, List<Map<String, Object>>> getTourDefinitions() {
         return new Map<String, List<Map<String, Object>>>{

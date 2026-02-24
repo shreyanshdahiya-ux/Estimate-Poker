@@ -1,11 +1,15 @@
 /**
  * @description Controller for User Story operations
- * Using 'without sharing' to allow all room members to access and manage stories
+ * Using 'with sharing' to enforce sharing rules for story data access
  */
-public without sharing class StoryController {
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.CognitiveComplexity')
+public with sharing class StoryController {
 
     /**
      * @description Creates a new user story
+     * @param storyData Map containing story details (title, description, etc.)
+     * @param roomId The room to create the story in
+     * @return The created User_Story__c record
      */
     @AuraEnabled
     public static User_Story__c createStory(Map<String, Object> storyData, Id roomId) {
@@ -20,6 +24,7 @@ public without sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -36,7 +41,7 @@ public without sharing class StoryController {
                 Notes__c = (String) storyData.get('notes')
             );
 
-            insert story;
+            insert as user story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -59,6 +64,9 @@ public without sharing class StoryController {
 
     /**
      * @description Creates multiple stories at once
+     * @param storyDataList List of story data maps
+     * @param roomId The room to create stories in
+     * @return List of created User_Story__c records
      */
     @AuraEnabled
     public static List<User_Story__c> bulkCreateStories(List<Map<String, Object>> storyDataList, Id roomId) {
@@ -69,6 +77,7 @@ public without sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -91,7 +100,7 @@ public without sharing class StoryController {
                 ));
             }
 
-            insert stories;
+            insert as user stories;
 
             // Publish events for each story
             for (User_Story__c story : stories) {
@@ -116,6 +125,9 @@ public without sharing class StoryController {
 
     /**
      * @description Updates a user story
+     * @param storyId The story to update
+     * @param storyData Map containing fields to update
+     * @return The updated User_Story__c record
      */
     @AuraEnabled
     public static User_Story__c updateStory(Id storyId, Map<String, Object> storyData) {
@@ -126,6 +138,7 @@ public without sharing class StoryController {
                        External_Story_Id__c, Notes__c, Final_Estimate__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -148,7 +161,7 @@ public without sharing class StoryController {
                 story.Notes__c = (String) storyData.get('notes');
             }
 
-            update story;
+            update as user story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -171,6 +184,7 @@ public without sharing class StoryController {
 
     /**
      * @description Deletes a user story
+     * @param storyId The story to delete
      */
     @AuraEnabled
     public static void deleteStory(Id storyId) {
@@ -179,13 +193,14 @@ public without sharing class StoryController {
                 SELECT Id, Room__c, Story_Title__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
             Id roomId = story.Room__c;
             String title = story.Story_Title__c;
 
-            delete story;
+            delete as user story;
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -206,17 +221,18 @@ public without sharing class StoryController {
 
     /**
      * @description Deletes all stories for a room
+     * @param roomId The room to delete stories from
      */
     @AuraEnabled
     public static void deleteAllStoriesByRoom(Id roomId) {
         try {
             List<User_Story__c> stories = [
-                SELECT Id FROM User_Story__c WHERE Room__c = :roomId
+                SELECT Id FROM User_Story__c WHERE Room__c = :roomId WITH USER_MODE
             ];
-            
+
             if (!stories.isEmpty()) {
-                delete stories;
-                
+                delete as user stories;
+
                 // Publish bulk delete event
                 PlatformEventPublisher.publishStoryEvent(
                     roomId,
@@ -237,6 +253,8 @@ public without sharing class StoryController {
 
     /**
      * @description Reorders stories in a room
+     * @param roomId The room containing the stories
+     * @param storyOrders List of maps with storyId and order values
      */
     @AuraEnabled
     public static void reorderStories(Id roomId, List<Map<String, Object>> storyOrders) {
@@ -250,7 +268,7 @@ public without sharing class StoryController {
                 ));
             }
 
-            update storiesToUpdate;
+            update as user storiesToUpdate;
 
             // Publish reorder event
             PlatformEventPublisher.publishStoryEvent(
@@ -271,6 +289,8 @@ public without sharing class StoryController {
 
     /**
      * @description Gets all stories for a room
+     * @param roomId The room to get stories for
+     * @return List of User_Story__c records
      */
     @AuraEnabled
     public static List<User_Story__c> getStoriesByRoom(Id roomId) {
@@ -283,6 +303,7 @@ public without sharing class StoryController {
                        Voting_Start_Time__c, Estimated_By__r.Name, CreatedDate
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST, CreatedDate
             ];
         } catch (Exception e) {
@@ -291,7 +312,9 @@ public without sharing class StoryController {
     }
 
     /**
-     * @description Gets a single story with details
+     * @description Gets a single story with details including votes and statistics
+     * @param storyId The story to get details for
+     * @return Map containing story, votes, statistics, and scale values
      */
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getStoryDetails(Id storyId) {
@@ -305,6 +328,7 @@ public without sharing class StoryController {
                        Room__r.Custom_Scale_Values__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -319,6 +343,7 @@ public without sharing class StoryController {
                            Voted_DateTime__c
                     FROM Estimation_Vote__c
                     WHERE User_Story__c = :storyId
+                    WITH USER_MODE
                     ORDER BY Voted_DateTime__c
                 ];
 
@@ -352,7 +377,9 @@ public without sharing class StoryController {
     }
 
     /**
-     * @description Sets story status
+     * @description Sets story status and handles related logic
+     * @param storyId The story to update
+     * @param status The new status value
      */
     @AuraEnabled
     public static void setStoryStatus(Id storyId, String status) {
@@ -361,6 +388,7 @@ public without sharing class StoryController {
                 SELECT Id, Room__c, Story_Title__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -368,7 +396,7 @@ public without sharing class StoryController {
             if (status == 'Voting') {
                 story.Voting_Start_Time__c = Datetime.now();
             }
-            update story;
+            update as user story;
 
             String action = status == 'Voting' ? 'activated' :
                            status == 'Skipped' ? 'skipped' : 'updated';
@@ -403,7 +431,10 @@ public without sharing class StoryController {
     }
 
     /**
-     * @description Gets next pending story in the room
+     * @description Gets next pending story in the room after the current one
+     * @param roomId The room to search in
+     * @param currentStoryId The current story ID to search after
+     * @return The next pending User_Story__c or null
      */
     @AuraEnabled
     public static User_Story__c getNextPendingStory(Id roomId, Id currentStoryId) {
@@ -411,7 +442,7 @@ public without sharing class StoryController {
             Integer currentOrder = 0;
             if (currentStoryId != null) {
                 User_Story__c current = [
-                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId LIMIT 1
+                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId WITH USER_MODE LIMIT 1
                 ];
                 currentOrder = current.Story_Order__c != null ?
                     (Integer) current.Story_Order__c : 0;
@@ -423,6 +454,7 @@ public without sharing class StoryController {
                 WHERE Room__c = :roomId
                 AND Status__c = 'Pending'
                 AND (Story_Order__c > :currentOrder OR Story_Order__c = null)
+                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST
                 LIMIT 1
             ];

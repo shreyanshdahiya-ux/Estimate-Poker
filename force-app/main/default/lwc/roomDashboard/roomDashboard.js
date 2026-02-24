@@ -1,15 +1,22 @@
-import { LightningElement, api, track, wire } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { loadScript } from 'lightning/platformResourceLoader';
+import { LightningElement, api, track } from 'lwc';
 import getRoomDetails from '@salesforce/apex/RoomController.getRoomDetails';
 import updateRoomStatus from '@salesforce/apex/RoomController.updateRoomStatus';
 import addRoomMembers from '@salesforce/apex/RoomController.addRoomMembers';
 import searchUsers from '@salesforce/apex/TeamController.searchUsers';
 import getVoteHistory from '@salesforce/apex/VotingController.getVoteHistory';
-import getStoriesByRoom from '@salesforce/apex/StoryController.getStoriesByRoom';
 
 export default class RoomDashboard extends LightningElement {
-    @api roomId;
+    _roomId;
+    @api 
+    get roomId() {
+        return this._roomId;
+    }
+    set roomId(value) {
+        this._roomId = value;
+        if (value) {
+            this.handleRefresh();
+        }
+    }
     @track roomDetails = {};
     @track stories = [];
     @track isLoading = true;
@@ -21,7 +28,6 @@ export default class RoomDashboard extends LightningElement {
     @track searchResults = [];
     @track selectedMembers = [];
     @track isSearching = false;
-    searchTimeout;
     searchTimeout;
 
     // Session timer state
@@ -37,9 +43,10 @@ export default class RoomDashboard extends LightningElement {
 
 
     connectedCallback() {
-        this.handleRefresh();
+        if (this.roomId) {
+            this.handleRefresh();
+        }
         this.startSessionTimer();
-        this.loadVoteHistory();
     }
 
     disconnectedCallback() {
@@ -87,7 +94,7 @@ export default class RoomDashboard extends LightningElement {
                     oscillator.start(audioContext.currentTime);
                     oscillator.stop(audioContext.currentTime + 0.15);
                     break;
-                case 'end':
+                case 'end': {
                     // Success chime (3 notes)
                     const playNote = (freq, delay, duration) => {
                         const osc = audioContext.createOscillator();
@@ -104,6 +111,7 @@ export default class RoomDashboard extends LightningElement {
                     playNote(659.25, 0.12, 0.15); // E5
                     playNote(783.99, 0.24, 0.3);  // G5
                     break;
+                }
             }
         } catch (error) {
             console.error('Error playing sound:', error);
@@ -317,7 +325,8 @@ export default class RoomDashboard extends LightningElement {
                     roleDisplay: `${member.Role_In_Room__c || 'Voter'}${member.Can_Vote__c ? ' • Can Vote' : ''}`,
                     // Format joined time for display
                     joinedTimeDisplay: this.formatMemberTime(member.Joined_Date__c),
-                    lastActivityDisplay: this.formatMemberTime(member.Last_Activity__c)
+                    lastActivityDisplay: this.formatMemberTime(member.Last_Activity__c),
+                    userNameDisplay: member.User__r?.Name || 'Unknown User'
                 };
             });
             console.log('processedMembers Details:', JSON.stringify(this.processedMembers));
@@ -458,6 +467,10 @@ export default class RoomDashboard extends LightningElement {
         const hasVotesInRoom = this.voteHistory && this.voteHistory.length > 0;
         const isCompleted = this.roomDetails?.room?.Status__c === 'Completed';
         return hasVotesInRoom || isCompleted;
+    }
+
+    get shouldShowResults() {
+        return this.isSessionCompleted && this.estimatedStories > 0;
     }
 
     get statusBadgeClass() {
@@ -735,6 +748,8 @@ export default class RoomDashboard extends LightningElement {
 
     
     async handleRefresh() {
+        if (!this.roomId) return;
+        
         try {
             // Update room details imperatively
             const roomData = await getRoomDetails({ roomId: this.roomId });
@@ -743,14 +758,13 @@ export default class RoomDashboard extends LightningElement {
                 this.currentUserHasVoted = roomData.currentUserHasVoted || false;
                 this.error = undefined;
                 this.processMembersWithStatus();
+                
+                // Use stories from roomData
+                this.stories = roomData.stories || [];
             }
             
-            // Always fetch stories imperatively since they are not in the wire
-            const storiesData = await getStoriesByRoom({ roomId: this.roomId });
-            this.stories = storiesData;
-            
-            // We can still attach to roomDetails for the charts if needed, or update charts to use this.stories
-            this.roomDetails = { ...this.roomDetails, stories: this.stories }; 
+            // Integrate vote history loading
+            await this.loadVoteHistory();
             
         } catch (error) {
             console.error('Error refreshing data:', error);
@@ -789,57 +803,49 @@ export default class RoomDashboard extends LightningElement {
         this.refreshStoryManager();
     }
 
-    handleStoryDeleted(event) {
-        const payload = event.detail;
-        this.showToast('Story Deleted', `A story was removed`, 'info');
+    handleStoryDeleted() {
+        this.showToast('Story Deleted', 'A story was removed', 'info');
         this.handleRefresh();
         this.refreshStoryManager();
     }
 
     // Member events
     handleMemberJoined(event) {
-        const payload = event.detail;
-        this.showToast('Member Joined', `${payload.User_Name__c} joined the room`, 'success');
+        this.showToast('Member Joined', `${event.detail.User_Name__c} joined the room`, 'success');
         this.handleRefresh();
     }
 
     handleMemberLeft(event) {
-        const payload = event.detail;
-        this.showToast('Member Left', `${payload.User_Name__c} left the room`, 'info');
+        this.showToast('Member Left', `${event.detail.User_Name__c} left the room`, 'info');
         this.handleRefresh();
     }
 
     // Session status events
-    handleStatusUpdated(event) {
-        const payload = event.detail;
+    handleStatusUpdated() {
         this.handleRefresh();
     }
 
-    handleSessionStarted(event) {
-        const payload = event.detail;
+    handleSessionStarted() {
         this.playSound('start');
         this.showToast('Session Started', 'The estimation session has started', 'success');
         this.startSessionTimer();
         this.handleRefresh();
     }
 
-    handleSessionEnded(event) {
-        const payload = event.detail;
+    handleSessionEnded() {
         this.playSound('end');
         this.stopSessionTimer();
         this.handleRefresh();
     }
 
-    handleSessionPaused(event) {
-        const payload = event.detail;
+    handleSessionPaused() {
         this.playSound('pause');
         this.showToast('Session Paused', 'The session has been paused', 'info');
         this.stopSessionTimer();
         this.handleRefresh();
     }
 
-    handleSessionResumed(event) {
-        const payload = event.detail;
+    handleSessionResumed() {
         this.playSound('resume');
         this.showToast('Session Resumed', 'The session has resumed', 'success');
         this.startSessionTimer();
@@ -847,33 +853,26 @@ export default class RoomDashboard extends LightningElement {
     }
 
     // Vote events
-    handleVoteEvent(event) {
-        // Refresh to get updated stats if needed
+    handleVoteEvent() {
+        // Refresh to get updated stats and history if needed
         this.handleRefresh();
-        // Check if votes were revealed and refresh history
-        if (event?.detail?.Action__c === 'votes_revealed') {
-            this.loadVoteHistory();
-        }
     }
 
     handleEstimateFinalized(event) {
-        const payload = event.detail;
-        this.showToast('Estimate Finalized', `Story estimate finalized: ${payload.Final_Estimate__c}`, 'success');
-        this.handleRefresh(); // Updates charts
+        this.showToast('Estimate Finalized', `Story estimate finalized: ${event.detail.Final_Estimate__c}`, 'success');
+        this.handleRefresh(); // Updates charts and history
         this.refreshStoryManager(); // Updates story list status
-        this.loadVoteHistory(); // Updates vote history
     }
 
     // Presence events
-    handlePresenceChanged(event) {
-        const payload = event.detail;
+    handlePresenceChanged() {
         // Update member presence status without showing toast (too noisy)
         this.processMembersWithStatus();
     }
 
     // Legacy event handlers (kept for backward compatibility)
     @api
-    handleMemberEvent(event) {
+    handleMemberEvent() {
         this.handleRefresh();
     }
 
@@ -901,7 +900,8 @@ export default class RoomDashboard extends LightningElement {
         }
     }
 
-    showToast(title, message, variant) {
-        // this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    // eslint-disable-next-line no-unused-vars
+    showToast(_title, _message, _variant) {
+        // Toast placeholder - ShowToastEvent not available in all contexts
     }
 }

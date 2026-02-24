@@ -103,7 +103,7 @@
 
         <template lwc:if={hasRoomData}>
 
-            <template lwc:if={isSessionCompleted}>
+            <template lwc:if={shouldShowResults}>
                 <div class="slds-box slds-theme_shade slds-var-m-bottom_medium results-container"
                     style="grid-column: 1 / -1;">
                     <div class="results-header-elite">
@@ -302,7 +302,9 @@
                                                 <template for:each={historyItem.votes} for:item="vote">
                                                     <div key={vote.odataUserId} class="history-vote-row">
                                                         <div class="vote-voter-info-mini">
-                                                            <img src={vote.voterPhoto} class="voter-avatar-mini" />
+                                                            <template lwc:if={vote.voterPhoto}>
+                                                                <img src={vote.voterPhoto} class="voter-avatar-mini" />
+                                                            </template>
                                                             <span class="vote-voter-name-mini">{vote.voterName}</span>
                                                         </div>
                                                         <div class="vote-data-ribbon">
@@ -374,9 +376,15 @@
                             <template for:each={processedMembers} for:item="member">
                                 <div key={member.Id} class="member-item">
                                     <div class="member-avatar-container">
-                                        <lightning-avatar src={member.User__r.SmallPhotoUrl}
-                                            fallback-icon-name="standard:user" size="small">
-                                        </lightning-avatar>
+                                        <template lwc:if={member.User__r}>
+                                            <lightning-avatar src={member.User__r.SmallPhotoUrl}
+                                                fallback-icon-name="standard:user" size="small">
+                                            </lightning-avatar>
+                                        </template>
+                                        <template lwc:else>
+                                            <lightning-avatar fallback-icon-name="standard:user" size="small">
+                                            </lightning-avatar>
+                                        </template>
                                         <!-- Blue tick indicator for users in session -->
                                         <template lwc:if={member.isInSession}>
                                             <span class="in-session-tick" title="In Session">
@@ -387,7 +395,7 @@
                                     </div>
                                     <div class="member-info">
                                         <div class="member-name-row">
-                                            <p class="member-name">{member.User__r.Name}</p>
+                                            <p class="member-name">{member.userNameDisplay}</p>
                                         </div>
                                         <p class="member-role">{member.roleDisplay}</p>
                                         <!-- Time info -->
