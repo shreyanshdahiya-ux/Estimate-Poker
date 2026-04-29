@@ -24,6 +24,7 @@ public with sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -40,7 +41,7 @@ public with sharing class StoryController {
                 Notes__c = (String) storyData.get('notes')
             );
 
-            insert story;
+            Database.insert(story, AccessLevel.USER_MODE);
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -76,6 +77,7 @@ public with sharing class StoryController {
                 SELECT MAX(Story_Order__c) maxOrder
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
             ];
             if (results[0].get('maxOrder') != null) {
                 maxOrder = ((Decimal) results[0].get('maxOrder')).intValue();
@@ -98,7 +100,7 @@ public with sharing class StoryController {
                 ));
             }
 
-            insert stories;
+            Database.insert(stories, AccessLevel.USER_MODE);
 
             // Publish events for each story
             for (User_Story__c story : stories) {
@@ -195,6 +197,7 @@ public with sharing class StoryController {
                 SELECT Id, Room__c, Story_Title__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -206,7 +209,7 @@ public with sharing class StoryController {
             Id roomId = story.Room__c;
             String title = story.Story_Title__c;
 
-            delete story;
+            Database.delete(story, AccessLevel.USER_MODE);
 
             // Publish event
             PlatformEventPublisher.publishStoryEvent(
@@ -239,10 +242,11 @@ public with sharing class StoryController {
 
             List<User_Story__c> stories = [
                 SELECT Id FROM User_Story__c WHERE Room__c = :roomId
+                WITH USER_MODE
             ];
 
             if (!stories.isEmpty()) {
-                delete stories;
+                Database.delete(stories, AccessLevel.USER_MODE);
 
                 // Publish bulk delete event
                 PlatformEventPublisher.publishStoryEvent(
@@ -284,7 +288,7 @@ public with sharing class StoryController {
                 ));
             }
 
-            update storiesToUpdate;
+            Database.update(storiesToUpdate, AccessLevel.USER_MODE);
 
             // Publish reorder event
             PlatformEventPublisher.publishStoryEvent(
@@ -319,6 +323,7 @@ public with sharing class StoryController {
                        Voting_Start_Time__c, Estimated_By__r.Name, CreatedDate
                 FROM User_Story__c
                 WHERE Room__c = :roomId
+                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST, CreatedDate
             ];
         } catch (Exception e) {
@@ -343,6 +348,7 @@ public with sharing class StoryController {
                        Room__r.Custom_Scale_Values__c
                 FROM User_Story__c
                 WHERE Id = :storyId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -357,6 +363,7 @@ public with sharing class StoryController {
                            Voted_DateTime__c
                     FROM Estimation_Vote__c
                     WHERE User_Story__c = :storyId
+                    WITH USER_MODE
                     ORDER BY Voted_DateTime__c
                 ];
 
@@ -461,7 +468,9 @@ public with sharing class StoryController {
             Integer currentOrder = 0;
             if (currentStoryId != null) {
                 User_Story__c current = [
-                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId LIMIT 1
+                    SELECT Story_Order__c FROM User_Story__c WHERE Id = :currentStoryId
+                    WITH USER_MODE
+                    LIMIT 1
                 ];
                 currentOrder = current.Story_Order__c != null ?
                     (Integer) current.Story_Order__c : 0;
@@ -473,6 +482,7 @@ public with sharing class StoryController {
                 WHERE Room__c = :roomId
                 AND Status__c = 'Pending'
                 AND (Story_Order__c > :currentOrder OR Story_Order__c = null)
+                WITH USER_MODE
                 ORDER BY Story_Order__c NULLS LAST
                 LIMIT 1
             ];

@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>Full administrative access to Estimation Poker application including ability to delete rooms, manage teams, and configure settings.</description>
-    <hasActivationRequired>false</hasActivationRequired>
-    <label>Estimation Poker Admin</label>
-    <license>Salesforce</license>
-
-    <!-- Application Visibility -->
     <applicationVisibilities>
         <application>Estimate_Poker</application>
         <visible>true</visible>
     </applicationVisibilities>
-
-    <!-- Apex Class Access -->
     <classAccesses>
         <apexClass>EstimationService</apexClass>
         <enabled>true</enabled>
@@ -20,7 +12,6 @@
         <apexClass>GuidanceController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-
     <classAccesses>
         <apexClass>PlatformEventPublisher</apexClass>
         <enabled>true</enabled>
@@ -45,14 +36,11 @@
         <apexClass>VotingController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-
-    <!-- Custom Metadata Type Access -->
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>Help_Content__mdt</name>
     </customMetadataTypeAccesses>
-
-    <!-- Field Permissions - Estimation_Poker_Room__c -->
+    <description>Full administrative access to Estimation Poker application including ability to delete rooms, manage teams, and configure settings.</description>
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Poker_Room__c.Current_Story__c</field>
@@ -108,8 +96,6 @@
         <field>Estimation_Poker_Room__c.Timer_Duration__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- Field Permissions - Estimation_Vote__c -->
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Vote__c.Comment__c</field>
@@ -135,20 +121,16 @@
         <field>Estimation_Vote__c.Room_Member__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Vote__c.Vote_Number__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Vote__c.Voted_DateTime__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- Field Permissions - Room_Member__c -->
     <fieldPermissions>
         <editable>true</editable>
         <field>Room_Member__c.Can_Vote__c</field>
@@ -174,7 +156,6 @@
         <field>Room_Member__c.Role_In_Room__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>Room_Member__c.Status__c</field>
@@ -185,8 +166,26 @@
         <field>Room_Member__c.User__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- Field Permissions - Team__c -->
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Team_Member__c.Active__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Team_Member__c.Joined_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Team_Member__c.Role__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Team_Member__c.User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Team__c.Active__c</field>
@@ -207,31 +206,6 @@
         <field>Team__c.Team_Lead__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- Field Permissions - Team_Member__c -->
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Team_Member__c.Active__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Team_Member__c.Joined_Date__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Team_Member__c.Role__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Team_Member__c.User__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-
-    <!-- Field Permissions - User_Story__c -->
     <fieldPermissions>
         <editable>true</editable>
         <field>User_Story__c.Acceptance_Criteria__c</field>
@@ -267,7 +241,6 @@
         <field>User_Story__c.Notes__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>User_Story__c.Status__c</field>
@@ -278,13 +251,11 @@
         <field>User_Story__c.Story_Description__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>User_Story__c.Story_Order__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
     <fieldPermissions>
         <editable>true</editable>
         <field>User_Story__c.Votes_Revealed__c</field>
@@ -295,8 +266,9 @@
         <field>User_Story__c.Voting_Start_Time__c</field>
         <readable>true</readable>
     </fieldPermissions>
-
-    <!-- Object Permissions - Estimation_Poker_Room__c -->
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Estimation Poker Admin</label>
+    <license>Salesforce</license>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -306,8 +278,6 @@
         <object>Estimation_Poker_Room__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Object Permissions - Estimation_Vote__c -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -317,8 +287,6 @@
         <object>Estimation_Vote__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Object Permissions - Help_Article__c -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -328,8 +296,51 @@
         <object>Help_Article__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Object Permissions - Room_Member__c -->
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Poker_Presence_Event__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Poker_Room_Event__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Poker_Story_Event__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Poker_Team_Event__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Poker_Vote_Event__e</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -339,19 +350,6 @@
         <object>Room_Member__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Object Permissions - Team__c -->
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
-        <object>Team__c</object>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-
-    <!-- Object Permissions - Team_Member__c -->
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -361,8 +359,15 @@
         <object>Team_Member__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Object Permissions - User_Story__c -->
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>true</modifyAllRecords>
+        <object>Team__c</object>
+        <viewAllRecords>true</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -372,35 +377,6 @@
         <object>User_Story__c</object>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
-
-    <!-- Platform Event Permissions -->
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowRead>true</allowRead>
-        <object>Poker_Presence_Event__e</object>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowRead>true</allowRead>
-        <object>Poker_Room_Event__e</object>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowRead>true</allowRead>
-        <object>Poker_Story_Event__e</object>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowRead>true</allowRead>
-        <object>Poker_Team_Event__e</object>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowRead>true</allowRead>
-        <object>Poker_Vote_Event__e</object>
-    </objectPermissions>
-
-    <!-- Tab Settings -->
     <tabSettings>
         <tab>Estimation_Poker_Room__c</tab>
         <visibility>Visible</visibility>

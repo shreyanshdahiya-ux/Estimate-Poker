@@ -4,6 +4,31 @@
 @isTest
 public with sharing class VotingControllerTest {
 
+    @testSetup
+    static void setupPermissions() {
+        List<PermissionSet> sets = [
+            SELECT Id FROM PermissionSet
+            WHERE Name = 'Estimation_Poker_Admin'
+            LIMIT 1
+        ];
+        if (sets.isEmpty()) {
+            return;
+        }
+        Id psId = sets[0].Id;
+        Id userId = UserInfo.getUserId();
+        List<PermissionSetAssignment> existing = [
+            SELECT Id FROM PermissionSetAssignment
+            WHERE AssigneeId = :userId AND PermissionSetId = :psId
+            LIMIT 1
+        ];
+        if (existing.isEmpty()) {
+            insert new PermissionSetAssignment(
+                AssigneeId = userId,
+                PermissionSetId = psId
+            );
+        }
+    }
+
     @isTest
     static void testSubmitVote() {
         Map<String, Object> setup = createFullTestSetup();
@@ -221,7 +246,8 @@ public with sharing class VotingControllerTest {
         Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
             Name = 'Test Room ' + System.now().getTime(),
             Status__c = 'Open',
-            Estimation_Scale__c = 'Fibonacci'
+            Estimation_Scale__c = 'Fibonacci',
+            Facilitator__c = UserInfo.getUserId()
         );
         insert room;
 
@@ -230,6 +256,7 @@ public with sharing class VotingControllerTest {
             Room__c = room.Id,
             User__c = UserInfo.getUserId(),
             Role_In_Room__c = 'Facilitator',
+            Status__c = 'Active',
             Joined_Date__c = System.now(),
             Is_Online__c = true,
             Can_Vote__c = true

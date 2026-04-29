@@ -211,7 +211,8 @@ public with sharing class StoryControllerTest {
         Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
             Name = 'Test Room ' + System.now().getTime(),
             Status__c = 'Open',
-            Estimation_Scale__c = 'Fibonacci'
+            Estimation_Scale__c = 'Fibonacci',
+            Facilitator__c = UserInfo.getUserId()
         );
         insert room;
 
@@ -220,6 +221,7 @@ public with sharing class StoryControllerTest {
             Room__c = room.Id,
             User__c = UserInfo.getUserId(),
             Role_In_Room__c = 'Facilitator',
+            Status__c = 'Active',
             Joined_Date__c = System.now(),
             Is_Online__c = true,
             Can_Vote__c = true

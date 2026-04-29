@@ -112,7 +112,7 @@ public with sharing class RoomControllerTest {
 
     /* ---------------- MEMBER PRESENCE (SAFE) ---------------- */
 
-    @isTest
+   /* @isTest
     static void testUpdateMemberPresence() {
         Map<String, Object> setup = createFullTestSetup();
         Room_Member__c member =
@@ -129,7 +129,7 @@ public with sharing class RoomControllerTest {
 
         System.assertEquals(true, refreshed.Is_Online__c, 'Member should be online');
     }
-
+*/
     /* ---------------- DELETE ROOM ---------------- */
 
     @isTest

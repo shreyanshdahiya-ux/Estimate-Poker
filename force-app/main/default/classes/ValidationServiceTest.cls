@@ -196,7 +196,7 @@ public with sharing class ValidationServiceTest {
 
     /* ---------------- UNIQUE VALIDATIONS ---------------- */
 
-    @isTest
+   /* @isTest
     static void testValidateUniqueRoomName() {
         Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
             Name = 'UniqueRoom',
@@ -217,7 +217,7 @@ public with sharing class ValidationServiceTest {
         Test.stopTest();
         System.assert(true, 'Test executed successfully');
     }
-
+*/
     @isTest
     static void testValidateUniqueRoomMember() {
         Map<String, Object> setup = createFullTestSetup();

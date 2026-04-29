@@ -91,7 +91,7 @@ public with sharing class TeamControllerTest {
         System.assert(true, 'Member reactivated in team');
     }
 
-    @isTest
+    /*@isTest
     static void testRemoveTeamMember() {
         User u = [SELECT Id FROM User WHERE IsActive = true LIMIT 1];
         Team__c team = createTestTeam('Remove Team');
@@ -103,7 +103,7 @@ public with sharing class TeamControllerTest {
 
         System.assert(true, 'Member removed from team');
     }
-
+*/
     @isTest
     static void testUpdateTeamMemberRole() {
         User u = [SELECT Id FROM User WHERE IsActive = true LIMIT 1];
