@@ -46,7 +46,10 @@ export default class RoomDashboard extends LightningElement {
         if (this.roomId) {
             this.handleRefresh();
         }
-        this.startSessionTimer();
+        // Don't start the timer here — handleRefresh will do it once roomDetails
+        // are loaded and only when the session is actually Active. Starting it
+        // unconditionally caused the display to advance before status was known
+        // (e.g., on landing in a Paused room).
     }
 
     disconnectedCallback() {
@@ -142,23 +145,30 @@ export default class RoomDashboard extends LightningElement {
 
         if (!startDateTime) {
             this.liveSessionDuration = '00:00:00';
+            this._pausedAt = null;
             return;
         }
 
         const start = new Date(startDateTime);
         let end;
 
-        // If session is completed or paused, use end time or current time frozen
+        // If session is completed or paused, freeze the elapsed time
         if (status === 'Completed' && endDateTime) {
             end = new Date(endDateTime);
-            // Stop the timer for completed sessions
+            this._pausedAt = null;
             this.stopSessionTimer();
         } else if (status === 'Paused') {
-            // For paused, show current duration but stop counting
-            end = new Date();
+            // Capture the pause moment once and reuse it on every recompute,
+            // so the displayed duration stays frozen instead of advancing on
+            // each reactive update.
+            if (!this._pausedAt) {
+                this._pausedAt = new Date();
+            }
+            end = this._pausedAt;
             this.stopSessionTimer();
         } else {
-            // Active session - keep counting
+            // Active session - keep counting and clear any prior pause snapshot
+            this._pausedAt = null;
             end = new Date();
         }
 
@@ -749,7 +759,7 @@ export default class RoomDashboard extends LightningElement {
     
     async handleRefresh() {
         if (!this.roomId) return;
-        
+
         try {
             // Update room details imperatively
             const roomData = await getRoomDetails({ roomId: this.roomId });
@@ -758,14 +768,18 @@ export default class RoomDashboard extends LightningElement {
                 this.currentUserHasVoted = roomData.currentUserHasVoted || false;
                 this.error = undefined;
                 this.processMembersWithStatus();
-                
+
                 // Use stories from roomData
                 this.stories = roomData.stories || [];
+
+                // Reconcile session-timer state with the latest room status.
+                // Only Active sessions should have the running interval.
+                this.syncSessionTimerWithStatus();
             }
-            
+
             // Integrate vote history loading
             await this.loadVoteHistory();
-            
+
         } catch (error) {
             console.error('Error refreshing data:', error);
             // Don't show toast on background refreshes to avoid spamming
@@ -773,6 +787,19 @@ export default class RoomDashboard extends LightningElement {
             this.isLoading = false;
             // Notify parent that dashboard has loaded
             this.dispatchEvent(new CustomEvent('loaded'));
+        }
+    }
+
+    syncSessionTimerWithStatus() {
+        const status = this.roomDetails?.room?.Status__c;
+        if (status === 'Active') {
+            this._pausedAt = null;
+            this.startSessionTimer();
+        } else {
+            // Paused, Completed, Draft, etc.: ensure the interval is stopped
+            // and refresh the display once with the frozen value.
+            this.stopSessionTimer();
+            this.updateLiveSessionDuration();
         }
     }
 

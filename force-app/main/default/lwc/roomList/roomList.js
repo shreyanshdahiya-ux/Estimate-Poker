@@ -1,4 +1,5 @@
-import { LightningElement, track, api } from 'lwc';
+import { LightningElement, track, api, wire } from 'lwc';
+import { refreshApex } from '@salesforce/apex';
 import getMyRooms from '@salesforce/apex/RoomController.getMyRooms';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 
@@ -7,7 +8,8 @@ export default class RoomList extends LightningElement {
     @track isLoading = true;
     @track searchTerm = '';
     @track statusFilter = 'all';
-    
+
+    wiredRoomsResult;
     subscription = {};
     channelName = '/event/Poker_Room_Event__e';
 
@@ -18,8 +20,20 @@ export default class RoomList extends LightningElement {
         { label: 'Completed', value: 'Completed' }
     ];
 
+    @wire(getMyRooms)
+    wiredRooms(result) {
+        this.wiredRoomsResult = result;
+        if (result.data) {
+            this.rooms = result.data.map(room => this.formatRoom(room));
+            this.isLoading = false;
+        } else if (result.error) {
+            this.showToast('Error', 'Failed to load rooms', 'error');
+            console.error('Error loading rooms:', result.error);
+            this.isLoading = false;
+        }
+    }
+
     connectedCallback() {
-        this.loadRooms();
         this.handleSubscribe();
     }
 
@@ -48,22 +62,24 @@ export default class RoomList extends LightningElement {
         });
     }
 
-    async loadRooms() {
+    @api
+    async refresh() {
+        if (!this.wiredRoomsResult) {
+            return;
+        }
         this.isLoading = true;
         try {
-            const data = await getMyRooms();
-            this.rooms = data.map(room => this.formatRoom(room));
+            await refreshApex(this.wiredRoomsResult);
         } catch (error) {
-            this.showToast('Error', 'Failed to load rooms', 'error');
-            console.error('Error loading rooms:', error);
+            this.showToast('Error', 'Failed to refresh rooms', 'error');
+            console.error('Error refreshing rooms:', error);
         } finally {
             this.isLoading = false;
         }
     }
 
-    @api
-    async refresh() {
-        await this.loadRooms();
+    handleRefreshClick() {
+        this.refresh();
     }
 
     formatRoom(room) {

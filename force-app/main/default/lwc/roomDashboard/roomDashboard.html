@@ -118,7 +118,10 @@
                                 <div class="card-bg-decoration radial-glow"></div>
                                 <h3 class="chart-title-elite">
                                     <lightning-icon icon-name="utility:graph" size="xx-small" class="title-icon"></lightning-icon>
-                                    Progress Density
+                                    <span>Progress Density</span>
+                                    <lightning-helptext class="chart-info-helptext"
+                                        content="Share of stories that are estimated vs. still pending. The outer ring fills clockwise as more stories get finalized. The center number is the percentage of stories the team has finished estimating.">
+                                    </lightning-helptext>
                                 </h3>
                                 <div class="pie-viz-elite">
                                     <div class="pie-ring-outer" style={pieChartStyle}>
@@ -151,7 +154,10 @@
                                 <div class="card-bg-decoration grid-pattern"></div>
                                 <h3 class="chart-title-elite">
                                     <lightning-icon icon-name="utility:chart" size="xx-small" class="title-icon"></lightning-icon>
-                                    Estimate Spread
+                                    <span>Estimate Spread</span>
+                                    <lightning-helptext class="chart-info-helptext"
+                                        content="Stories finalized at each estimate value. The number on each bar is the story count; the pill below is the estimate (story points). The most-used estimate is marked with a star.">
+                                    </lightning-helptext>
                                 </h3>
                                 <template lwc:if={hasChartData}>
                                     <div class="bar-viz-elite-container">
