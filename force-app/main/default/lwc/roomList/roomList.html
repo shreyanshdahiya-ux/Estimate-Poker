@@ -1,5 +1,9 @@
 <template>
     <lightning-card title="My Estimation Rooms" icon-name="custom:custom63">
+        <lightning-button-icon slot="actions" icon-name="utility:refresh" alternative-text="Refresh"
+            title="Refresh" variant="border-filled" onclick={handleRefreshClick}
+            class="slds-m-right_xx-small" disabled={isLoading}>
+        </lightning-button-icon>
         <lightning-button slot="actions" label="New Room" variant="brand" icon-name="utility:add"
             onclick={handleCreateRoom}>
         </lightning-button>

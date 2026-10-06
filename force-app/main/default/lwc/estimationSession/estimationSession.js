@@ -421,7 +421,7 @@ export default class EstimationSession extends LightningElement {
     }
 
     @api
-    handleMemberEvent(event) {
+    handleMemberEvent() {
         // Refresh all session data when members change
         this.loadSessionData();
     }
@@ -665,7 +665,7 @@ export default class EstimationSession extends LightningElement {
         }
     }
 
-    handleMemberEventFromHandler(event) {
+    handleMemberEventFromHandler() {
         // Refresh session data when members join/leave
         this.loadSessionData();
     }

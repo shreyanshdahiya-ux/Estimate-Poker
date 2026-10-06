@@ -2,25 +2,48 @@
  * @description Validation service for Planning Poker data
  * Using 'without sharing' to allow validation queries to run without sharing restrictions
  */
-public without sharing class ValidationService {
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.CognitiveComplexity, PMD.AvoidDeeplyNestedIfStmts')
+public with sharing class ValidationService {
 
+    /** @description Custom exception for validation errors */
     public class ValidationException extends Exception {}
 
     /**
      * @description Validates room data before creation/update
+     * @param roomData Map of room fields
      */
     public static void validateRoomData(Map<String, Object> roomData) {
         List<String> errors = new List<String>();
 
-        // Validate room name
+        validateBasicRoomInfo(roomData, errors);
+        validateScaleConfig(roomData, errors);
+        validateFacilitator(roomData, errors);
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(String.join(errors, '; '));
+        }
+    }
+
+    /**
+     * @description Validates basic room information fields
+     * @param roomData Map of room field values
+     * @param errors List to collect validation error messages
+     */
+    private static void validateBasicRoomInfo(Map<String, Object> roomData, List<String> errors) {
         String roomName = (String) roomData.get('name');
         if (String.isBlank(roomName)) {
             errors.add('Room name is required');
         } else if (roomName.length() > 80) {
             errors.add('Room name cannot exceed 80 characters');
         }
+    }
 
-        // Validate estimation scale
+    /**
+     * @description Validates estimation scale configuration
+     * @param roomData Map of room field values
+     * @param errors List to collect validation error messages
+     */
+    private static void validateScaleConfig(Map<String, Object> roomData, List<String> errors) {
         String scale = (String) roomData.get('estimationScale');
         if (String.isNotBlank(scale)) {
             Set<String> validScales = new Set<String>{'Fibonacci', 'Modified Fibonacci', 'T-Shirt Sizes', 'Powers of 2', 'Custom'};
@@ -28,7 +51,6 @@ public without sharing class ValidationService {
                 errors.add('Invalid estimation scale: ' + scale);
             }
 
-            // If Custom scale, validate custom values
             if (scale == 'Custom') {
                 String customValues = (String) roomData.get('customScaleValues');
                 if (String.isBlank(customValues)) {
@@ -36,8 +58,14 @@ public without sharing class ValidationService {
                 }
             }
         }
+    }
 
-        // Validate facilitator
+    /**
+     * @description Validates the facilitator ID if provided
+     * @param roomData Map of room field values
+     * @param errors List to collect validation error messages
+     */
+    private static void validateFacilitator(Map<String, Object> roomData, List<String> errors) {
         String facilitatorId = (String) roomData.get('facilitatorId');
         if (String.isNotBlank(facilitatorId)) {
             try {
@@ -46,6 +74,18 @@ public without sharing class ValidationService {
                 errors.add('Invalid facilitator ID');
             }
         }
+    }
+
+
+    /**
+     * @description Validates story data before creation/update
+     * @param storyData Map of story fields
+     */
+    public static void validateStoryData(Map<String, Object> storyData) {
+        List<String> errors = new List<String>();
+
+        validateStoryBasicInfo(storyData, errors);
+        validateStoryOrder(storyData, errors);
 
         if (!errors.isEmpty()) {
             throw new ValidationException(String.join(errors, '; '));
@@ -53,12 +93,11 @@ public without sharing class ValidationService {
     }
 
     /**
-     * @description Validates story data before creation/update
+     * @description Validates basic story information fields
+     * @param storyData Map of story field values
+     * @param errors List to collect validation error messages
      */
-    public static void validateStoryData(Map<String, Object> storyData) {
-        List<String> errors = new List<String>();
-
-        // Validate story title
+    private static void validateStoryBasicInfo(Map<String, Object> storyData, List<String> errors) {
         String title = (String) storyData.get('title');
         if (String.isBlank(title)) {
             errors.add('Story title is required');
@@ -66,7 +105,6 @@ public without sharing class ValidationService {
             errors.add('Story title cannot exceed 255 characters');
         }
 
-        // Validate room ID
         String roomId = (String) storyData.get('roomId');
         if (String.isBlank(roomId)) {
             errors.add('Room ID is required');
@@ -77,8 +115,14 @@ public without sharing class ValidationService {
                 errors.add('Invalid room ID');
             }
         }
+    }
 
-        // Validate story order if provided
+    /**
+     * @description Validates the story order value if provided
+     * @param storyData Map of story field values
+     * @param errors List to collect validation error messages
+     */
+    private static void validateStoryOrder(Map<String, Object> storyData, List<String> errors) {
         Object orderObj = storyData.get('storyOrder');
         if (orderObj != null) {
             try {
@@ -90,14 +134,12 @@ public without sharing class ValidationService {
                 errors.add('Invalid story order value');
             }
         }
-
-        if (!errors.isEmpty()) {
-            throw new ValidationException(String.join(errors, '; '));
-        }
     }
+
 
     /**
      * @description Validates vote data before submission
+     * @param voteData Map of vote fields
      */
     public static void validateVote(Map<String, Object> voteData) {
         List<String> errors = new List<String>();
@@ -129,6 +171,9 @@ public without sharing class ValidationService {
 
     /**
      * @description Checks if a user can vote on a specific story
+     * @param roomMemberId ID of the room member
+     * @param storyId ID of the story
+     * @return True if voting is allowed
      */
     public static Boolean canUserVote(Id roomMemberId, Id storyId) {
         // Get room member details
@@ -136,6 +181,7 @@ public without sharing class ValidationService {
             SELECT Id, Can_Vote__c, Status__c, Room__c, Room__r.Status__c
             FROM Room_Member__c
             WHERE Id = :roomMemberId
+            WITH USER_MODE
             LIMIT 1
         ];
 
@@ -160,6 +206,7 @@ public without sharing class ValidationService {
             SELECT Id, Status__c, Room__c, Votes_Revealed__c
             FROM User_Story__c
             WHERE Id = :storyId
+            WITH USER_MODE
             LIMIT 1
         ];
 
@@ -188,9 +235,11 @@ public without sharing class ValidationService {
 
     /**
      * @description Validates that room name is unique among active rooms
+     * @param roomName Name to check
+     * @param excludeRoomId ID to exclude (for updates)
      */
     public static void validateUniqueRoomName(String roomName, Id excludeRoomId) {
-        String query = 'SELECT Id FROM Estimation_Poker_Room__c WHERE Name = :roomName AND Status__c != \'Archived\'';
+        String query = 'SELECT Id FROM Estimation_Poker_Room__c WHERE Name = :roomName AND Status__c != \'Archived\' WITH USER_MODE';
 
         if (excludeRoomId != null) {
             query += ' AND Id != :excludeRoomId';
@@ -205,9 +254,12 @@ public without sharing class ValidationService {
 
     /**
      * @description Validates that a user is not already a member of the room
+     * @param roomId ID of the room
+     * @param odataUserId ID of the user
+     * @param excludeMemberId ID to exclude
      */
     public static void validateUniqueRoomMember(Id roomId, Id odataUserId, Id excludeMemberId) {
-        String query = 'SELECT Id FROM Room_Member__c WHERE Room__c = :roomId AND User__c = :odataUserId AND Status__c != \'Removed\'';
+        String query = 'SELECT Id FROM Room_Member__c WHERE Room__c = :roomId AND User__c = :odataUserId AND Status__c != \'Removed\' WITH USER_MODE';
 
         if (excludeMemberId != null) {
             query += ' AND Id != :excludeMemberId';
@@ -222,9 +274,12 @@ public without sharing class ValidationService {
 
     /**
      * @description Validates team member uniqueness
+     * @param teamId ID of the team
+     * @param odataUserId ID of the user
+     * @param excludeMemberId ID to exclude
      */
     public static void validateUniqueTeamMember(Id teamId, Id odataUserId, Id excludeMemberId) {
-        String query = 'SELECT Id FROM Team_Member__c WHERE Team__c = :teamId AND User__c = :odataUserId AND Active__c = true';
+        String query = 'SELECT Id FROM Team_Member__c WHERE Team__c = :teamId AND User__c = :odataUserId AND Active__c = true WITH USER_MODE';
 
         if (excludeMemberId != null) {
             query += ' AND Id != :excludeMemberId';
@@ -239,11 +294,13 @@ public without sharing class ValidationService {
 
     /**
      * @description Validates that estimate cannot be finalized without votes
+     * @param storyId ID of the story
      */
     public static void validateFinalizeEstimate(Id storyId) {
         List<Estimation_Vote__c> votes = [
             SELECT Id FROM Estimation_Vote__c
             WHERE User_Story__c = :storyId
+            WITH USER_MODE
             LIMIT 1
         ];
 
@@ -254,12 +311,16 @@ public without sharing class ValidationService {
 
     /**
      * @description Checks if user has permission to manage room
+     * @param roomId ID of the room
+     * @param odataUserId ID of the user
+     * @return True if user can manage the room
      */
     public static Boolean canManageRoom(Id roomId, Id odataUserId) {
         List<Estimation_Poker_Room__c> rooms = [
             SELECT Id, Facilitator__c
             FROM Estimation_Poker_Room__c
             WHERE Id = :roomId
+            WITH USER_MODE
             LIMIT 1
         ];
 
@@ -279,6 +340,7 @@ public without sharing class ValidationService {
             AND User__c = :odataUserId
             AND Role_In_Room__c = 'Facilitator'
             AND Status__c = 'Active'
+            WITH USER_MODE
             LIMIT 1
         ];
 
