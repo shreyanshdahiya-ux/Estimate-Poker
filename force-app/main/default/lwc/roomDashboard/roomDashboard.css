@@ -231,6 +231,12 @@
     z-index: 2;
 }
 
+.chart-info-helptext {
+    --sds-c-icon-color-foreground-default: #6b7280;
+    margin-left: 2px;
+    line-height: 1;
+}
+
 .title-icon { 
     padding: 6px; 
     background: white; 

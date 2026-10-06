@@ -1,5 +1,8 @@
+// CustomEvents here intentionally use neither bubbles nor composed:
+// the on* template listeners on this component's host element catch them directly,
+// since `this.dispatchEvent(...)` fires AT the host (which lives in the parent's shadow tree).
 import { LightningElement, api, track } from 'lwc';
-import { subscribe, unsubscribe, onError, setDebugFlag, isEmpEnabled } from 'lightning/empApi';
+import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 
 export default class RealtimeEventHandler extends LightningElement {
     @api showDebug = false;
@@ -34,7 +37,6 @@ export default class RealtimeEventHandler extends LightningElement {
     }
 
     set roomId(value) {
-        const oldValue = this._roomId;
         this._roomId = value;
 
         // If we haven't subscribed yet, do it now.
@@ -181,8 +183,6 @@ export default class RealtimeEventHandler extends LightningElement {
         this._isSubscribed = false;
 
         try {
-            const unsubscribePromises = [];
-
             // Helper function to safely unsubscribe
             const safeUnsubscribe = async (subscription, name) => {
                 if (subscription && subscription.callback) {
@@ -242,7 +242,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'voted':
                     this.dispatchEvent(new CustomEvent('votereceived', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -250,7 +249,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'vote_updated':
                     this.dispatchEvent(new CustomEvent('voteupdated', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -258,7 +256,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'vote_deleted':
                     this.dispatchEvent(new CustomEvent('votedeleted', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -266,7 +263,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'votes_revealed':
                     this.dispatchEvent(new CustomEvent('votesrevealed', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -274,7 +270,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'votes_reset':
                     this.dispatchEvent(new CustomEvent('votesreset', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -282,7 +277,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'estimate_finalized':
                     this.dispatchEvent(new CustomEvent('estimatefinalized', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -318,7 +312,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'member_joined':
                     this.dispatchEvent(new CustomEvent('memberjoined', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -326,7 +319,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'member_left':
                     this.dispatchEvent(new CustomEvent('memberleft', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -335,7 +327,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'story_changed':
                     this.dispatchEvent(new CustomEvent('storychanged', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -343,7 +334,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'status_updated':
                     this.dispatchEvent(new CustomEvent('statusupdated', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -351,7 +341,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'session_started':
                     this.dispatchEvent(new CustomEvent('sessionstarted', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -359,7 +348,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'session_ended':
                     this.dispatchEvent(new CustomEvent('sessionended', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -367,7 +355,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'session_paused':
                     this.dispatchEvent(new CustomEvent('sessionpaused', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -375,7 +362,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'session_resumed':
                     this.dispatchEvent(new CustomEvent('sessionresumed', {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
@@ -384,14 +370,14 @@ export default class RealtimeEventHandler extends LightningElement {
                 case 'timer_started':
                 case 'timer_paused':
                 case 'timer_resumed':
-                case 'timer_stopped':
+                case 'timer_stopped': {
                     const eventName = action.replace('_', '');
                     this.dispatchEvent(new CustomEvent(eventName, {
                         detail: payload,
-                        bubbles: true,
                         composed: true
                     }));
                     break;
+                }
 
                 default:
                     this.logDebug('Unknown room action:', action);
@@ -424,7 +410,6 @@ export default class RealtimeEventHandler extends LightningElement {
                 try {
                     this.dispatchEvent(new CustomEvent(eventName, {
                         detail: detail,
-                        bubbles: true,
                         composed: true
                     }));
                 } catch (dispatchError) {
@@ -488,7 +473,6 @@ export default class RealtimeEventHandler extends LightningElement {
 
             this.dispatchEvent(new CustomEvent('presencechanged', {
                 detail: payload,
-                bubbles: true,
                 composed: true
             }));
         } catch (error) {

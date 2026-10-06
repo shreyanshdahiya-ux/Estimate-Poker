@@ -1,7 +1,5 @@
-import { LightningElement, api, track, wire } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { refreshApex } from '@salesforce/apex';
-import getStoriesByRoom from '@salesforce/apex/StoryController.getStoriesByRoom';
 import createStory from '@salesforce/apex/StoryController.createStory';
 import updateStory from '@salesforce/apex/StoryController.updateStory';
 import deleteStory from '@salesforce/apex/StoryController.deleteStory';

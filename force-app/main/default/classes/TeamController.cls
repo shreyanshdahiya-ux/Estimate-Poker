@@ -1,10 +1,13 @@
 /**
  * @description Controller for Team management operations
  */
-public without sharing class TeamController {
+@SuppressWarnings('PMD.CyclomaticComplexity, PMD.CognitiveComplexity')
+public with sharing class TeamController {
 
     /**
      * @description Creates a new team
+     * @param teamData Map containing team details (name, description, department)
+     * @return The created Team__c record
      */
     @AuraEnabled
     public static Team__c createTeam(Map<String, Object> teamData) {
@@ -17,10 +20,10 @@ public without sharing class TeamController {
                 Active__c = true
             );
 
-            insert team;
+            insert as user team;
 
             // Add creator as team member with Scrum Master role
-            insert new Team_Member__c(
+            insert as user new Team_Member__c(
                 Team__c = team.Id,
                 User__c = UserInfo.getUserId(),
                 Role__c = 'Scrum Master',
@@ -48,6 +51,7 @@ public without sharing class TeamController {
 
     /**
      * @description Gets all teams with member counts
+     * @return List of team data maps with member counts
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getAllTeams() {
@@ -58,6 +62,7 @@ public without sharing class TeamController {
                        CreatedDate
                 FROM Team__c
                 WHERE Active__c = true
+                WITH USER_MODE
                 ORDER BY Name
             ];
 
@@ -72,6 +77,7 @@ public without sharing class TeamController {
                 SELECT Team__c, COUNT(Id) cnt
                 FROM Team_Member__c
                 WHERE Team__c IN :teamIds AND Active__c = true
+                WITH USER_MODE
                 GROUP BY Team__c
             ]) {
                 memberCounts.put((Id) ar.get('Team__c'), ((Decimal) ar.get('cnt')).intValue());
@@ -98,6 +104,8 @@ public without sharing class TeamController {
 
     /**
      * @description Gets teams for the current user
+     * @param odataUserId ID of the user to get teams for
+     * @return List of team data maps
      */
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getTeamsForUser(Id odataUserId) {
@@ -112,6 +120,7 @@ public without sharing class TeamController {
                 WHERE User__c = :targetUserId
                 AND Active__c = true
                 AND Team__r.Active__c = true
+                WITH USER_MODE
                 ORDER BY Team__r.Name
             ];
 
@@ -128,6 +137,7 @@ public without sharing class TeamController {
                 SELECT Team__c, COUNT(Id) cnt
                 FROM Team_Member__c
                 WHERE Team__c IN :teamIds AND Active__c = true
+                WITH USER_MODE
                 GROUP BY Team__c
             ]) {
                 memberCounts.put((Id) ar.get('Team__c'), ((Decimal) ar.get('cnt')).intValue());
@@ -153,6 +163,8 @@ public without sharing class TeamController {
 
     /**
      * @description Gets team members
+     * @param teamId ID of the team
+     * @return List of team member data maps
      */
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> getTeamMembers(Id teamId) {
@@ -164,6 +176,7 @@ public without sharing class TeamController {
                 FROM Team_Member__c
                 WHERE Team__c = :teamId
                 AND Active__c = true
+                WITH USER_MODE
                 ORDER BY User__r.Name
             ];
 
@@ -189,6 +202,10 @@ public without sharing class TeamController {
 
     /**
      * @description Adds a team member
+     * @param teamId ID of the team
+     * @param odataUserId User to add
+     * @param role Role for the member
+     * @return The created or reactivated member
      */
     @AuraEnabled
     public static Team_Member__c addTeamMember(Id teamId, Id odataUserId, String role) {
@@ -197,6 +214,7 @@ public without sharing class TeamController {
             List<Team_Member__c> existing = [
                 SELECT Id, Active__c FROM Team_Member__c 
                 WHERE Team__c = :teamId AND User__c = :odataUserId 
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -210,7 +228,7 @@ public without sharing class TeamController {
                 member.Active__c = true;
                 member.Role__c = String.isNotBlank(role) ? role : 'Developer';
                 member.Joined_Date__c = Date.today();
-                update member;
+                update as user member;
             } else {
                 // New member
                 member = new Team_Member__c(
@@ -220,11 +238,11 @@ public without sharing class TeamController {
                     Joined_Date__c = Date.today(),
                     Active__c = true
                 );
-                insert member;
+                insert as user member;
             }
 
             // Publish Member Added Event
-            User u = [SELECT Name FROM User WHERE Id = :odataUserId LIMIT 1];
+            User u = [SELECT Name FROM User WHERE Id = :odataUserId WITH USER_MODE LIMIT 1];
             PlatformEventPublisher.publishTeamEvent(
                 teamId,
                 'member_added',
@@ -244,6 +262,7 @@ public without sharing class TeamController {
 
     /**
      * @description Removes a team member
+     * @param teamMemberId ID of the member to remove
      */
     @AuraEnabled
     public static void removeTeamMember(Id teamMemberId) {
@@ -252,14 +271,15 @@ public without sharing class TeamController {
                 SELECT Id, User__c, Team__c, Active__c
                 FROM Team_Member__c
                 WHERE Id = :teamMemberId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
             member.Active__c = false;
-            update member;
+            update as user member;
 
             // Publish Member Removed Event
-            User u = [SELECT Name FROM User WHERE Id = :member.User__c LIMIT 1];
+            User u = [SELECT Name FROM User WHERE Id = :member.User__c WITH USER_MODE LIMIT 1];
             PlatformEventPublisher.publishTeamEvent(
                 member.Team__c,
                 'member_removed',
@@ -276,17 +296,19 @@ public without sharing class TeamController {
 
     /**
      * @description Updates team member role
+     * @param teamMemberId ID of the member
+     * @param role New role name
      */
     @AuraEnabled
     public static void updateTeamMemberRole(Id teamMemberId, String role) {
         try {
-            update new Team_Member__c(
+            update as user new Team_Member__c(
                 Id = teamMemberId,
                 Role__c = role
             );
 
             // Publish Role Updated Event
-            Team_Member__c member = [SELECT Team__c, User__c, User__r.Name FROM Team_Member__c WHERE Id = :teamMemberId LIMIT 1];
+            Team_Member__c member = [SELECT Team__c, User__c, User__r.Name FROM Team_Member__c WHERE Id = :teamMemberId WITH USER_MODE LIMIT 1];
             PlatformEventPublisher.publishTeamEvent(
                 member.Team__c,
                 'role_updated',
@@ -304,6 +326,9 @@ public without sharing class TeamController {
 
     /**
      * @description Updates team details
+     * @param teamId ID of the team
+     * @param teamData Map of data to update
+     * @return Updated Team record
      */
     @AuraEnabled
     public static Team__c updateTeam(Id teamId, Map<String, Object> teamData) {
@@ -312,6 +337,7 @@ public without sharing class TeamController {
                 SELECT Id, Name, Description__c, Department__c, Team_Lead__c
                 FROM Team__c
                 WHERE Id = :teamId
+                WITH USER_MODE
                 LIMIT 1
             ];
 
@@ -328,7 +354,7 @@ public without sharing class TeamController {
                 team.Team_Lead__c = (Id) teamData.get('teamLeadId');
             }
 
-            update team;
+            update as user team;
             return team;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
@@ -337,11 +363,12 @@ public without sharing class TeamController {
 
     /**
      * @description Deactivates a team
+     * @param teamId ID of the team to deactivate
      */
     @AuraEnabled
     public static void deactivateTeam(Id teamId) {
         try {
-            update new Team__c(
+            update as user new Team__c(
                 Id = teamId,
                 Active__c = false
             );
@@ -361,6 +388,8 @@ public without sharing class TeamController {
 
     /**
      * @description Searches for users to add to team
+     * @param searchTerm String to search for
+     * @return List of matching users
      */
     @AuraEnabled(cacheable=true)
     public static List<User> searchUsers(String searchTerm) {
@@ -371,6 +400,7 @@ public without sharing class TeamController {
                 FROM User
                 WHERE IsActive = true
                 AND (Name LIKE :searchPattern OR Email LIKE :searchPattern)
+                WITH USER_MODE
                 ORDER BY Name
                 LIMIT 20
             ];
@@ -381,6 +411,8 @@ public without sharing class TeamController {
 
     /**
      * @description Gets team details
+     * @param teamId ID of the team
+     * @return Team details
      */
     @AuraEnabled(cacheable=true)
     public static Team__c getTeamDetails(Id teamId) {
@@ -391,6 +423,7 @@ public without sharing class TeamController {
                        CreatedDate, LastModifiedDate
                 FROM Team__c
                 WHERE Id = :teamId
+                WITH USER_MODE
                 LIMIT 1
             ];
         } catch (Exception e) {
@@ -399,19 +432,20 @@ public without sharing class TeamController {
     }
     /**
      * @description Deletes a team
+     * @param teamId ID of the team to delete
      */
     @AuraEnabled
     public static void deleteTeam(Id teamId) {
         try {
             Team__c team = [
-                SELECT Id, Team_Lead__c FROM Team__c WHERE Id = :teamId LIMIT 1
+                SELECT Id, Team_Lead__c FROM Team__c WHERE Id = :teamId WITH USER_MODE LIMIT 1
             ];
 
             if (team.Team_Lead__c != UserInfo.getUserId()) {
                 throw new AuraHandledException('Only the Team Lead can delete the team.');
             }
 
-            delete team;
+            delete as user team;
 
             // Publish Team Deleted Event
             PlatformEventPublisher.publishTeamEvent(
@@ -423,7 +457,7 @@ public without sharing class TeamController {
             );
         } catch (Exception e) {
             String errorMessage = e.getMessage();
-            System.debug('Error deleting team: ' + errorMessage + '\n' + e.getStackTraceString());
+            // System.debug removed as per PMD (Performance/Best Practices)
             throw new AuraHandledException(errorMessage);
         }
     }

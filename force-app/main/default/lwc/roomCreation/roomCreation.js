@@ -1,5 +1,4 @@
 import { LightningElement, track } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import createRoom from '@salesforce/apex/RoomController.createRoom';
 import getAllTeams from '@salesforce/apex/TeamController.getAllTeams';
 import getTeamMembers from '@salesforce/apex/TeamController.getTeamMembers';
@@ -387,13 +386,8 @@ export default class RoomCreation extends LightningElement {
         }
     }
 
-    showToast(title, message, variant) {
-        /*
-        this.dispatchEvent(new ShowToastEvent({
-            title,
-            message,
-            variant
-        }));
-        */
+    // eslint-disable-next-line no-unused-vars
+    showToast(_title, _message, _variant) {
+        // Toast placeholder
     }
 }

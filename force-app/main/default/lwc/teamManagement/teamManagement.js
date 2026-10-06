@@ -9,7 +9,6 @@ import addTeamMember from '@salesforce/apex/TeamController.addTeamMember';
 import removeTeamMember from '@salesforce/apex/TeamController.removeTeamMember';
 import updateTeamMemberRole from '@salesforce/apex/TeamController.updateTeamMemberRole';
 import searchUsers from '@salesforce/apex/TeamController.searchUsers';
-import updateTeam from '@salesforce/apex/TeamController.updateTeam';
 import { refreshApex } from '@salesforce/apex';
 import USER_ID from '@salesforce/user/Id';
 
