@@ -46,3 +46,9 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+
+# CLI scratch output
+deploy_log*
+deployment_output.txt
+org_*.json
+security-report.html
