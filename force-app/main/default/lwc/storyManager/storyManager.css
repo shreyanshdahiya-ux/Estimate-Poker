@@ -1,349 +1,368 @@
 /* Story Container */
 .stories-container {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    overflow: visible;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: visible;
 }
 
 /* Story Card */
 .story-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    /* overflow: hidden; Removed to prevent clipping of action dropdowns */
-    cursor: default;
-    z-index: 1;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  /* overflow: hidden; Removed to prevent clipping of action dropdowns */
+  cursor: default;
+  z-index: 1;
 }
 
 .story-card[draggable="true"]:hover {
-    cursor: pointer; /* Show hand icon for draggability */
+  cursor: pointer; /* Show hand icon for draggability */
 }
 
 /* Ensure proper stacking for dropdown menus - first card needs higher z-index when active */
 .story-card:first-child {
-    z-index: 2;
+  z-index: 2;
 }
 
 .story-card:focus-within {
-    z-index: 100;
+  z-index: 100;
 }
 
 .story-card:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .story-card-content {
-    display: flex;
-    align-items: center;
-    padding: 0.875rem 1rem;
-    gap: 1rem;
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  gap: 1rem;
 }
 
 /* Drag Handle */
 .drag-handle {
-    cursor: pointer; /* Changed to hand icon as requested */
-    color: #94a3b8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+  cursor: pointer; /* Changed to hand icon as requested */
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .drag-handle:hover {
-    background: #f1f5f9;
-    color: #64748b;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .drag-handle:active {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 /* Story Main Info */
 .story-main {
-    flex-grow: 1;
-    min-width: 0; /* Allow truncation */
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
+  flex-grow: 1;
+  min-width: 0; /* Allow truncation */
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
 .story-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .story-index {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: #94a3b8;
-    background: #f8fafc;
-    padding: 2px 6px;
-    border-radius: 4px;
-    min-width: 28px;
-    text-align: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  background: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 28px;
+  text-align: center;
 }
 
 .story-title-text {
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: #1e293b;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Story Meta & Badges */
 .story-meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
-.status-pending { background: #f1f5f9; color: #64748b; }
-.status-voting { background: #dbeafe; color: #1e40af; border: 1px solid rgba(30, 64, 175, 0.1); }
-.status-estimated { background: #d1fae5; color: #065f46; border: 1px solid rgba(6, 95, 70, 0.1); }
-.status-skipped { background: #fee2e2; color: #991b1b; }
+.status-pending {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.status-voting {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid rgba(30, 64, 175, 0.1);
+}
+.status-estimated {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid rgba(6, 95, 70, 0.1);
+}
+.status-skipped {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 .status-icon {
-    --slds-c-icon-color-foreground: currentColor;
+  --slds-c-icon-color-foreground: currentColor;
 }
 
 .estimate-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    color: #6366f1;
-    font-size: 0.75rem;
-    font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #6366f1;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .tag-icon {
-    --slds-c-icon-color-foreground: #6366f1;
+  --slds-c-icon-color-foreground: #6366f1;
 }
 
 /* Drag and Drop states */
 .story-card.dragging {
-    opacity: 0.4;
-    background: #f8fafc;
-    border: 2px dashed #6366f1;
-    transform: scale(0.98);
+  opacity: 0.4;
+  background: #f8fafc;
+  border: 2px dashed #6366f1;
+  transform: scale(0.98);
 }
 
 .story-card.drag-over {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    transform: translateY(2px);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  transform: translateY(2px);
 }
 
 /* Empty State */
 .empty-state-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
 }
 
 .empty-state-illustration {
-    width: 64px;
-    height: 64px;
-    background: #f1f5f9;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    color: #94a3b8;
+  width: 64px;
+  height: 64px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: #94a3b8;
+}
+
+.empty-icon {
+  --slds-c-icon-color-foreground-default: #64748b;
+  --sds-c-icon-color-foreground-default: #64748b;
 }
 
 .empty-state-container h4 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
 }
 
 .empty-state-container p {
-    color: #64748b;
-    max-width: 240px;
-    line-height: 1.5;
+  color: #64748b;
+  max-width: 240px;
+  line-height: 1.5;
 }
 
 /* Actions Menu */
 .story-actions {
-    position: relative;
-    z-index: 10;
+  position: relative;
+  z-index: 10;
 }
 
 /* Ensure dropdown menus are not clipped */
 .story-actions lightning-button-menu {
-    position: relative;
-    z-index: inherit;
+  position: relative;
+  z-index: inherit;
 }
 
 /* Force the dropdown to appear above other story cards */
 .story-card:has(.story-actions lightning-button-menu[aria-expanded="true"]) {
-    z-index: 100;
+  z-index: 100;
 }
 
 .menu-item-destructive {
-    --slds-c-menu-item-text-color: #dc2626;
+  --slds-c-menu-item-text-color: #dc2626;
 }
 
 /* Bulk Import Styles */
 .bulk-import-container {
-    padding: 1.5rem;
+  padding: 1.5rem;
 }
 
 .bulk-import-textarea {
-    min-height: 200px;
-    border-radius: 12px;
+  min-height: 200px;
+  border-radius: 12px;
 }
 
 .parsed-stories-list {
-    max-height: 350px;
-    overflow-y: auto;
-    padding-right: 0.5rem;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .parsed-story-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.875rem;
-    transition: all 0.2s ease;
-    margin-bottom: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.875rem;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
 }
 
 .parsed-story-item:hover {
-    border-color: #c7d2fe;
-    background: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  border-color: #c7d2fe;
+  background: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
 
 .parsed-story-title {
-    font-weight: 500;
-    color: #1e293b;
-    font-size: 0.9rem;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 0.9rem;
 }
 
 .parsed-story-description {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
 }
 
 /* Story List */
 .story-list {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
 }
 
 .story-list-item:hover {
-    background-color: #f0f4ff;
-    transform: translateX(4px);
+  background-color: #f0f4ff;
+  transform: translateX(4px);
 }
 
 .story-title {
-    font-weight: 500;
-    color: #1e293b;
-    flex: 1;
+  font-weight: 500;
+  color: #1e293b;
+  flex: 1;
 }
 
 .story-status-badge {
-    padding: 0.25rem 0.625rem;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
+  padding: 0.25rem 0.625rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .story-status-pending {
-    background: #f1f5f9;
-    color: #64748b;
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .story-status-voting {
-    background: #dbeafe;
-    color: #1e40af;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .story-status-estimated {
-    background: #d1fae5;
-    color: #065f46;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 /* Rich Text Editor - Compact Style to fit modal better */
 .rich-text-compact {
-    --slds-c-textarea-sizing-min-height: 120px;
+  --slds-c-textarea-sizing-min-height: 120px;
 }
 
 /* Ensure toolbar doesn't cause modal layout jumps */
 lightning-input-rich-text .slds-rich-text-editor__toolbar {
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 /* Modal sizing stability */
 .slds-modal__container {
-    max-width: 90% !important;
-    width: 800px !important;
+  max-width: 90% !important;
+  width: 800px !important;
 }
 
 .slds-modal__content {
-    overflow-y: visible !important; /* Help prevent clipping/flicker */
+  overflow-y: visible !important; /* Help prevent clipping/flicker */
 }
 
 /* Ensure lightning-card body doesn't clip dropdown menus */
 :host {
-    --slds-c-card-body-overflow: visible;
+  --slds-c-card-body-overflow: visible;
 }
 
 lightning-card {
-    overflow: visible;
+  overflow: visible;
 }
 
 .slds-modal__close {
-    border-radius: 50% !important;
-    background-color: white !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    top: -14px !important;
-    right: -14px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    width: 32px !important;
-    height: 32px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+  border-radius: 50% !important;
+  background-color: white !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  top: -14px !important;
+  right: -14px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .slds-modal__close:hover {
-    background-color: white !important;
-    transform: scale(1.15) rotate(90deg) !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+  background-color: white !important;
+  transform: scale(1.15) rotate(90deg) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
 }

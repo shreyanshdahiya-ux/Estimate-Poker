@@ -1,302 +1,452 @@
 <template>
-    <div class="team-management">
-        <!-- Page Header -->
-        <div class="page-header slds-grid slds-grid_vertical-align-center">
-            <div class="slds-col">
-                <h1>✨ Team Management</h1>
-                <p>Create and manage your estimation teams with ease</p>
-            </div>
-            <div class="slds-col_bump-left slds-grid slds-grid_vertical-align-center">
-                <lightning-button-icon icon-name="utility:refresh" variant="border-filled" alternative-text="Refresh"
-                    onclick={handleRefresh} class="slds-m-right_small" title="Refresh Teams">
-                </lightning-button-icon>
-                <lightning-button label="New Team" variant="brand" icon-name="utility:add" onclick={handleNewTeam}>
-                </lightning-button>
-            </div>
-        </div>
-
-        <!-- Teams Container -->
-        <div class="teams-container">
-            <div class="section-header">
-                <span class="section-title">
-                    <lightning-icon icon-name="standard:groups" size="x-small"></lightning-icon>
-                    Your Teams
-                </span>
-            </div>
-
-            <!-- Loading State -->
-            <template lwc:if={isLoading}>
-                <div class="loading-container">
-                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
-                </div>
-            </template>
-
-            <!-- Teams Grid -->
-            <template lwc:if={hasTeams}>
-                <div class="teams-grid">
-                    <template for:each={teams} for:item="team">
-                        <div key={team.id} class="team-card" data-team-id={team.id} onclick={handleTeamClick}>
-                            <div class="team-card-header">
-                                <div class="team-icon">
-                                    <lightning-icon icon-name="utility:groups" size="small"
-                                        variant="inverse"></lightning-icon>
-                                </div>
-                                <h3 class="team-name">{team.name}</h3>
-                            </div>
-                            <p class="team-description">{team.description}</p>
-                            <div class="team-meta">
-                                <span class="member-count">
-                                    <lightning-icon icon-name="utility:people" size="xx-small"></lightning-icon>
-                                    {team.memberCount} members
-                                </span>
-                            </div>
-                            <div class="team-footer">
-                                <template lwc:if={team.department}>
-                                    <span class="department-badge">{team.department}</span>
-                                </template>
-                                <template lwc:else>
-                                    <span></span>
-                                </template>
-                                <template lwc:if={team.teamLead}>
-                                    <span class="team-lead">
-                                        <lightning-icon icon-name="utility:user" size="xx-small"></lightning-icon>
-                                        {team.teamLead}
-                                    </span>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </template>
-
-            <!-- Empty State -->
-            <template lwc:if={noTeams}>
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        <lightning-icon icon-name="utility:groups" size="large"></lightning-icon>
-                    </div>
-                    <h3>🚀 No Teams Yet</h3>
-                    <p>Create your first team to get started with collaborative estimation and unlock the power of team-based planning.</p>
-                </div>
-            </template>
-        </div>
+  <div class="team-management">
+    <!-- Page Header -->
+    <div class="page-header slds-grid slds-grid_vertical-align-center">
+      <div class="slds-col">
+        <h1>✨ Team Management</h1>
+        <p>Create and manage your estimation teams with ease</p>
+      </div>
+      <div class="slds-col_bump-left slds-grid slds-grid_vertical-align-center">
+        <lightning-button-icon
+          icon-name="utility:refresh"
+          variant="border-filled"
+          alternative-text="Refresh"
+          onclick={handleRefresh}
+          class="slds-m-right_small"
+          title="Refresh Teams"
+        >
+        </lightning-button-icon>
+        <template lwc:if={canCreateTeam}>
+          <lightning-button
+            label="New Team"
+            variant="brand"
+            icon-name="utility:add"
+            onclick={handleNewTeam}
+          >
+          </lightning-button>
+        </template>
+      </div>
     </div>
 
-    <!-- New Team Modal -->
-    <template lwc:if={showNewTeamModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
-                        variant="bare" onclick={handleCloseModal} class="slds-modal__close">
-                    </lightning-button-icon>
-                    <h2 class="slds-modal__title slds-hyphenate">🎯 Create New Team</h2>
-                </header>
-                <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input label="Team Name" data-field="name" value={newTeam.name}
-                        onchange={handleInputChange} required>
-                    </lightning-input>
-                    <lightning-textarea label="Description" data-field="description" value={newTeam.description}
-                        onchange={handleInputChange} class="slds-m-top_small">
-                    </lightning-textarea>
-                    <lightning-input label="Department" data-field="department" value={newTeam.department}
-                        onchange={handleInputChange} class="slds-m-top_small">
-                    </lightning-input>
-                </div>
-                <footer class="slds-modal__footer">
-                    <lightning-button label="Cancel" onclick={handleCloseModal}></lightning-button>
-                    <lightning-button label="Create Team" variant="brand" onclick={handleSaveTeam}
-                        class="slds-m-left_small"></lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+    <!-- Teams Container -->
+    <div class="teams-container">
+      <div class="section-header">
+        <span class="section-title">
+          <lightning-icon
+            icon-name="standard:groups"
+            size="x-small"
+          ></lightning-icon>
+          Your Teams
+        </span>
+      </div>
 
-    <!-- Team Detail Modal -->
-    <template lwc:if={showTeamDetailModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header modal-header">
-                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
-                        variant="bare" onclick={handleCloseTeamDetailModal} class="slds-modal__close">
-                    </lightning-button-icon>
-                    <h2 class="slds-modal__title slds-hyphenate">{selectedTeam.name}</h2>
-                </header>
-                <div class="slds-modal__content slds-p-around_medium">
-                    <!-- Team Info Section -->
-                    <div class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium">
-                        <div class="slds-grid slds-wrap slds-gutters_small">
-                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                                <p class="slds-text-title_caps slds-text-color_weak">Department</p>
-                                <p class="slds-text-body_regular">{selectedTeam.department}</p>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                                <p class="slds-text-title_caps slds-text-color_weak">Team Lead</p>
-                                <p class="slds-text-body_regular">{selectedTeam.teamLead}</p>
-                            </div>
-                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
-                                <p class="slds-text-title_caps slds-text-color_weak">Members</p>
-                                <p class="slds-text-body_regular">{selectedTeam.memberCount}</p>
-                            </div>
+      <!-- Loading State -->
+      <template lwc:if={isLoading}>
+        <div class="loading-container">
+          <lightning-spinner
+            alternative-text="Loading"
+            size="medium"
+          ></lightning-spinner>
+        </div>
+      </template>
+
+      <!-- Teams Grid -->
+      <template lwc:if={hasTeams}>
+        <div class="teams-grid">
+          <template for:each={teams} for:item="team">
+            <div
+              key={team.id}
+              class="team-card"
+              data-team-id={team.id}
+              onclick={handleTeamClick}
+            >
+              <div class="team-card-header">
+                <div class="team-icon">
+                  <lightning-icon
+                    icon-name="utility:groups"
+                    size="small"
+                    variant="inverse"
+                  ></lightning-icon>
+                </div>
+                <h3 class="team-name">{team.name}</h3>
+              </div>
+              <p class="team-description">{team.description}</p>
+              <div class="team-meta">
+                <span class="member-count">
+                  <lightning-icon
+                    icon-name="utility:people"
+                    size="xx-small"
+                  ></lightning-icon>
+                  {team.memberCount} members
+                </span>
+              </div>
+              <div class="team-footer">
+                <template lwc:if={team.department}>
+                  <span class="department-badge">{team.department}</span>
+                </template>
+                <template lwc:else>
+                  <span></span>
+                </template>
+                <template lwc:if={team.teamLead}>
+                  <span class="team-lead">
+                    <lightning-icon
+                      icon-name="utility:user"
+                      size="xx-small"
+                    ></lightning-icon>
+                    {team.teamLead}
+                  </span>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Empty State -->
+      <template lwc:if={noTeams}>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <lightning-icon
+              icon-name="utility:groups"
+              size="large"
+            ></lightning-icon>
+          </div>
+          <h3>🚀 No Teams Yet</h3>
+          <p>
+            Create your first team to get started with collaborative estimation
+            and unlock the power of team-based planning.
+          </p>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- New Team Modal -->
+  <template lwc:if={showNewTeamModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            title="Close"
+            variant="bare"
+            onclick={handleCloseModal}
+            class="slds-modal__close"
+          >
+          </lightning-button-icon>
+          <h2 class="slds-modal__title slds-hyphenate">🎯 Create New Team</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <lightning-input
+            label="Team Name"
+            data-field="name"
+            value={newTeam.name}
+            onchange={handleInputChange}
+            required
+          >
+          </lightning-input>
+          <lightning-textarea
+            label="Description"
+            data-field="description"
+            value={newTeam.description}
+            onchange={handleInputChange}
+            class="slds-m-top_small"
+          >
+          </lightning-textarea>
+          <lightning-input
+            label="Department"
+            data-field="department"
+            value={newTeam.department}
+            onchange={handleInputChange}
+            class="slds-m-top_small"
+          >
+          </lightning-input>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Cancel"
+            onclick={handleCloseModal}
+          ></lightning-button>
+          <lightning-button
+            label="Create Team"
+            variant="brand"
+            onclick={handleSaveTeam}
+            class="slds-m-left_small"
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+  <!-- Team Detail Modal -->
+  <template lwc:if={showTeamDetailModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header modal-header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            title="Close"
+            variant="bare"
+            onclick={handleCloseTeamDetailModal}
+            class="slds-modal__close"
+          >
+          </lightning-button-icon>
+          <h2 class="slds-modal__title slds-hyphenate">{selectedTeam.name}</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <!-- Team Info Section -->
+          <div
+            class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium"
+          >
+            <div class="slds-grid slds-wrap slds-gutters_small">
+              <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                <p class="slds-text-title_caps slds-text-color_weak">
+                  Department
+                </p>
+                <p class="slds-text-body_regular">{selectedTeam.department}</p>
+              </div>
+              <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                <p class="slds-text-title_caps slds-text-color_weak">
+                  Team Lead
+                </p>
+                <p class="slds-text-body_regular">{selectedTeam.teamLead}</p>
+              </div>
+              <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                <p class="slds-text-title_caps slds-text-color_weak">Members</p>
+                <p class="slds-text-body_regular">{selectedTeam.memberCount}</p>
+              </div>
+            </div>
+            <template lwc:if={selectedTeam.description}>
+              <div class="slds-m-top_small">
+                <p class="slds-text-title_caps slds-text-color_weak">
+                  Description
+                </p>
+                <p class="slds-text-body_regular">{selectedTeam.description}</p>
+              </div>
+            </template>
+          </div>
+
+          <!-- Team Members Section -->
+          <div class="slds-section slds-is-open">
+            <h3 class="slds-section__title">
+              <span
+                class="slds-truncate slds-p-horizontal_small"
+                title="Team Members"
+              >
+                <lightning-icon
+                  icon-name="utility:people"
+                  size="x-small"
+                  class="slds-m-right_x-small"
+                ></lightning-icon>
+                Team Members
+              </span>
+              <template lwc:if={canAddMembers}>
+                <lightning-button
+                  label="Add Member"
+                  variant="neutral"
+                  icon-name="utility:add"
+                  onclick={handleShowAddMember}
+                  class="slds-col_bump-left slds-text-body_small"
+                >
+                </lightning-button>
+              </template>
+            </h3>
+
+            <!-- Add Member Section -->
+            <template lwc:if={showAddMemberSection}>
+              <div class="slds-box slds-m-vertical_small">
+                <div
+                  class="slds-grid slds-grid_vertical-align-end slds-gutters_small"
+                >
+                  <div class="slds-col slds-grow">
+                    <lightning-input
+                      type="search"
+                      label="Search Users"
+                      placeholder="Search by name or email..."
+                      value={memberSearchTerm}
+                      onchange={handleMemberSearchChange}
+                    >
+                    </lightning-input>
+                  </div>
+                  <div class="slds-col">
+                    <lightning-button
+                      label="Cancel"
+                      onclick={handleCancelAddMember}
+                    >
+                    </lightning-button>
+                  </div>
+                </div>
+
+                <!-- Search Results -->
+                <template lwc:if={isSearchingMembers}>
+                  <div class="slds-align_absolute-center slds-m-top_medium">
+                    <lightning-spinner
+                      alternative-text="Searching"
+                      size="small"
+                    ></lightning-spinner>
+                  </div>
+                </template>
+
+                <template lwc:if={hasMemberSearchResults}>
+                  <ul class="slds-has-dividers_bottom-space slds-m-top_small">
+                    <template for:each={memberSearchResults} for:item="user">
+                      <li
+                        key={user.Id}
+                        class="slds-item slds-p-vertical_x-small"
+                      >
+                        <div class="slds-grid slds-grid_vertical-align-center">
+                          <lightning-avatar
+                            src={user.SmallPhotoUrl}
+                            fallback-icon-name="standard:user"
+                            size="small"
+                            class="slds-m-right_small"
+                          >
+                          </lightning-avatar>
+                          <div class="slds-col slds-grow">
+                            <p class="slds-text-body_regular">{user.Name}</p>
+                            <p
+                              class="slds-text-body_small slds-text-color_weak"
+                            >
+                              {user.Email}
+                            </p>
+                          </div>
+                          <lightning-button
+                            label="Add"
+                            variant="brand"
+                            data-user-id={user.Id}
+                            onclick={handleAddMemberToTeam}
+                          >
+                          </lightning-button>
                         </div>
-                        <template lwc:if={selectedTeam.description}>
-                            <div class="slds-m-top_small">
-                                <p class="slds-text-title_caps slds-text-color_weak">Description</p>
-                                <p class="slds-text-body_regular">{selectedTeam.description}</p>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- Team Members Section -->
-                    <div class="slds-section slds-is-open">
-                        <h3 class="slds-section__title">
-                            <span class="slds-truncate slds-p-horizontal_small" title="Team Members">
-                                <lightning-icon icon-name="utility:people" size="x-small"
-                                                class="slds-m-right_x-small"></lightning-icon>
-                                Team Members
-                            </span>
-                            <lightning-button label="Add Member" 
-                                            variant="neutral" 
-                                            icon-name="utility:add"
-                                            onclick={handleShowAddMember} 
-                                            class="slds-col_bump-left slds-text-body_small">
-                            </lightning-button>
-                        </h3>
-                        
-                        <!-- Add Member Section -->
-                        <template lwc:if={showAddMemberSection}>
-                            <div class="slds-box slds-m-vertical_small">
-                                <div class="slds-grid slds-grid_vertical-align-end slds-gutters_small">
-                                    <div class="slds-col slds-grow">
-                                        <lightning-input type="search" label="Search Users"
-                                            placeholder="Search by name or email..." value={memberSearchTerm}
-                                            onchange={handleMemberSearchChange}>
-                                        </lightning-input>
-                                    </div>
-                                    <div class="slds-col">
-                                        <lightning-button label="Cancel" onclick={handleCancelAddMember}>
-                                        </lightning-button>
-                                    </div>
-                                </div>
-
-                                <!-- Search Results -->
-                                <template lwc:if={isSearchingMembers}>
-                                    <div class="slds-align_absolute-center slds-m-top_medium">
-                                        <lightning-spinner alternative-text="Searching"
-                                            size="small"></lightning-spinner>
-                                    </div>
-                                </template>
-
-                                <template lwc:if={hasMemberSearchResults}>
-                                    <ul class="slds-has-dividers_bottom-space slds-m-top_small">
-                                        <template for:each={memberSearchResults} for:item="user">
-                                            <li key={user.Id} class="slds-item slds-p-vertical_x-small">
-                                                <div class="slds-grid slds-grid_vertical-align-center">
-                                                    <lightning-avatar src={user.SmallPhotoUrl}
-                                                        fallback-icon-name="standard:user" size="small"
-                                                        class="slds-m-right_small">
-                                                    </lightning-avatar>
-                                                    <div class="slds-col slds-grow">
-                                                        <p class="slds-text-body_regular">{user.Name}</p>
-                                                        <p class="slds-text-body_small slds-text-color_weak">
-                                                            {user.Email}</p>
-                                                    </div>
-                                                    <lightning-button label="Add" variant="brand" data-user-id={user.Id}
-                                                        onclick={handleAddMemberToTeam}>
-                                                    </lightning-button>
-                                                </div>
-                                            </li>
-                                        </template>
-                                    </ul>
-                                </template>
-
-                                <template lwc:if={noMemberSearchResults}>
-                                    <p class="slds-text-align_center slds-m-top_medium slds-text-color_weak">No users
-                                        found</p>
-                                </template>
-                            </div>
-                        </template>
-
-                        <!-- Members Loading -->
-                        <template lwc:if={isLoadingMembers}>
-                            <div class="slds-align_absolute-center slds-p-around_medium">
-                                <lightning-spinner alternative-text="Loading members" size="small"></lightning-spinner>
-                            </div>
-                        </template>
-
-                        <!-- Members List -->
-                        <template lwc:if={hasTeamMembers}>
-                            <div class="slds-section__content">
-                                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
-                                    <thead>
-                                        <tr class="slds-line-height_reset">
-                                            <th scope="col">
-                                                <div class="slds-truncate">Member</div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="slds-truncate">Email</div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="slds-truncate">Role</div>
-                                            </th>
-                                            <th scope="col">
-                                                <div class="slds-truncate">Actions</div>
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template for:each={teamMembers} for:item="member">
-                                            <tr key={member.id}>
-                                                <td>
-                                                    <div class="slds-grid slds-grid_vertical-align-center">
-                                                        <lightning-avatar src={member.photoUrl}
-                                                            fallback-icon-name="standard:user" size="small"
-                                                            class="slds-m-right_small">
-                                                        </lightning-avatar>
-                                                        <span>{member.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td>{member.email}</td>
-                                                <td>
-                                                    <lightning-combobox value={member.role} options={roleOptions}
-                                                        data-member-id={member.id} onchange={handleRoleChange}
-                                                        variant="label-hidden">
-                                                    </lightning-combobox>
-                                                </td>
-                                                <td>
-                                                    <lightning-button-icon icon-name="utility:delete" variant="bare"
-                                                        alternative-text="Remove member" data-member-id={member.id}
-                                                        onclick={handleRemoveMember}>
-                                                    </lightning-button-icon>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </template>
-
-                        <!-- No Members -->
-                        <template lwc:if={noTeamMembers}>
-                            <div class="slds-text-align_center slds-p-around_medium">
-                                <p class="slds-text-body_regular" style="color: #64748b;">👥 No team members yet. Add members to get started.</p>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                <footer class="slds-modal__footer slds-grid slds-grid_align-spread">
-                    <template lwc:if={isLead}>
-                        <button class="slds-button slds-button_destructive" onclick={handleDeleteTeam}>Delete Team</button>
+                      </li>
                     </template>
-                    <template lwc:else>
-                        <span></span>
-                    </template>
-                    <lightning-button label="Close" onclick={handleCloseTeamDetailModal}></lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+                  </ul>
+                </template>
 
+                <template lwc:if={noMemberSearchResults}>
+                  <p
+                    class="slds-text-align_center slds-m-top_medium slds-text-color_weak"
+                  >
+                    No users found
+                  </p>
+                </template>
+              </div>
+            </template>
+
+            <!-- Members Loading -->
+            <template lwc:if={isLoadingMembers}>
+              <div class="slds-align_absolute-center slds-p-around_medium">
+                <lightning-spinner
+                  alternative-text="Loading members"
+                  size="small"
+                ></lightning-spinner>
+              </div>
+            </template>
+
+            <!-- Members List -->
+            <template lwc:if={hasTeamMembers}>
+              <div class="slds-section__content">
+                <table
+                  class="slds-table slds-table_cell-buffer slds-table_bordered"
+                >
+                  <thead>
+                    <tr class="slds-line-height_reset">
+                      <th scope="col">
+                        <div class="slds-truncate">Member</div>
+                      </th>
+                      <th scope="col">
+                        <div class="slds-truncate">Email</div>
+                      </th>
+                      <th scope="col">
+                        <div class="slds-truncate">Role</div>
+                      </th>
+                      <th scope="col">
+                        <div class="slds-truncate">Actions</div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template for:each={teamMembers} for:item="member">
+                      <tr key={member.id}>
+                        <td>
+                          <div
+                            class="slds-grid slds-grid_vertical-align-center"
+                          >
+                            <lightning-avatar
+                              src={member.photoUrl}
+                              fallback-icon-name="standard:user"
+                              size="small"
+                              class="slds-m-right_small"
+                            >
+                            </lightning-avatar>
+                            <span>{member.name}</span>
+                          </div>
+                        </td>
+                        <td>{member.email}</td>
+                        <td>
+                          <template lwc:if={canEditMembers}>
+                            <lightning-combobox
+                              value={member.role}
+                              options={roleOptions}
+                              data-member-id={member.id}
+                              onchange={handleRoleChange}
+                              variant="label-hidden"
+                            >
+                            </lightning-combobox>
+                          </template>
+                          <template lwc:else>{member.role}</template>
+                        </td>
+                        <td>
+                          <template lwc:if={canEditMembers}>
+                            <lightning-button-icon
+                              icon-name="utility:delete"
+                              variant="bare"
+                              alternative-text="Remove member"
+                              data-member-id={member.id}
+                              onclick={handleRemoveMember}
+                            >
+                            </lightning-button-icon>
+                          </template>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+
+            <!-- No Members -->
+            <template lwc:if={noTeamMembers}>
+              <div class="slds-text-align_center slds-p-around_medium">
+                <p class="slds-text-body_regular" style="color: #64748b">
+                  👥 No team members yet. Add members to get started.
+                </p>
+              </div>
+            </template>
+          </div>
+        </div>
+        <footer class="slds-modal__footer slds-grid slds-grid_align-spread">
+          <template lwc:if={canDeleteTeam}>
+            <button
+              class="slds-button slds-button_destructive"
+              onclick={handleDeleteTeam}
+            >
+              Delete Team
+            </button>
+          </template>
+          <template lwc:else>
+            <span></span>
+          </template>
+          <lightning-button
+            label="Close"
+            onclick={handleCloseTeamDetailModal}
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
 </template>

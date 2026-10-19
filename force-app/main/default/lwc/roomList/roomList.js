@@ -1,157 +1,168 @@
-import { LightningElement, track, api, wire } from 'lwc';
-import { refreshApex } from '@salesforce/apex';
-import getMyRooms from '@salesforce/apex/RoomController.getMyRooms';
-import { subscribe, unsubscribe, onError } from 'lightning/empApi';
+import { LightningElement, track, api, wire } from "lwc";
+import { refreshApex } from "@salesforce/apex";
+import getMyRooms from "@salesforce/apex/RoomController.getMyRooms";
+import { subscribe, unsubscribe, onError } from "lightning/empApi";
+import { getEventChannel, stripNamespace } from "c/nsUtil";
+import canFacilitate from "@salesforce/customPermission/Facilitate_Estimation_Rooms";
 
 export default class RoomList extends LightningElement {
-    @track rooms = [];
-    @track isLoading = true;
-    @track searchTerm = '';
-    @track statusFilter = 'all';
+  @track rooms = [];
+  @track isLoading = true;
+  @track searchTerm = "";
+  @track statusFilter = "all";
 
-    wiredRoomsResult;
-    subscription = {};
-    channelName = '/event/Poker_Room_Event__e';
+  // Granted by the Facilitator and Admin permission sets; only these users can create rooms
+  canCreateRoom = canFacilitate;
 
-    statusOptions = [
-        { label: 'All', value: 'all' },
-        { label: 'Draft', value: 'Draft' },
-        { label: 'Active', value: 'Active' },
-        { label: 'Completed', value: 'Completed' }
-    ];
+  wiredRoomsResult;
+  subscription = {};
+  channelName;
 
-    @wire(getMyRooms)
-    wiredRooms(result) {
-        this.wiredRoomsResult = result;
-        if (result.data) {
-            this.rooms = result.data.map(room => this.formatRoom(room));
-            this.isLoading = false;
-        } else if (result.error) {
-            this.showToast('Error', 'Failed to load rooms', 'error');
-            console.error('Error loading rooms:', result.error);
-            this.isLoading = false;
-        }
+  statusOptions = [
+    { label: "All", value: "all" },
+    { label: "Draft", value: "Draft" },
+    { label: "Active", value: "Active" },
+    { label: "Completed", value: "Completed" }
+  ];
+
+  @wire(getMyRooms)
+  wiredRooms(result) {
+    this.wiredRoomsResult = result;
+    if (result.data) {
+      this.rooms = stripNamespace(result.data).map((room) =>
+        this.formatRoom(room)
+      );
+      this.isLoading = false;
+    } else if (result.error) {
+      this.showToast("Error", "Failed to load rooms", "error");
+      console.error("Error loading rooms:", result.error);
+      this.isLoading = false;
     }
+  }
 
-    connectedCallback() {
-        this.handleSubscribe();
+  connectedCallback() {
+    this.handleSubscribe();
+  }
+
+  disconnectedCallback() {
+    this.handleUnsubscribe();
+  }
+
+  async handleSubscribe() {
+    this.channelName = await getEventChannel("Poker_Room_Event__e");
+    const messageCallback = (response) => {
+      console.log("Room List event received: ", JSON.stringify(response));
+      this.refresh();
+    };
+
+    subscribe(this.channelName, -1, messageCallback).then((response) => {
+      this.subscription = response;
+    });
+
+    onError((error) => {
+      console.error("EMP API error: ", JSON.stringify(error));
+    });
+  }
+
+  handleUnsubscribe() {
+    unsubscribe(this.subscription, () => {
+      console.log("Unsubscribed from channel: ", this.channelName);
+    });
+  }
+
+  @api
+  async refresh() {
+    if (!this.wiredRoomsResult) {
+      return;
     }
-
-    disconnectedCallback() {
-        this.handleUnsubscribe();
+    this.isLoading = true;
+    try {
+      await refreshApex(this.wiredRoomsResult);
+    } catch (error) {
+      this.showToast("Error", "Failed to refresh rooms", "error");
+      console.error("Error refreshing rooms:", error);
+    } finally {
+      this.isLoading = false;
     }
+  }
 
-    handleSubscribe() {
-        const messageCallback = (response) => {
-            console.log('Room List event received: ', JSON.stringify(response));
-            this.refresh();
-        };
+  handleRefreshClick() {
+    this.refresh();
+  }
 
-        subscribe(this.channelName, -1, messageCallback).then(response => {
-            this.subscription = response;
-        });
+  formatRoom(room) {
+    const statusClasses = {
+      Draft: "slds-badge slds-badge_lightest",
+      Active: "slds-badge slds-theme_success",
+      Completed: "slds-badge slds-theme_info"
+    };
 
-        onError(error => {
-            console.error('EMP API error: ', JSON.stringify(error));
-        });
-    }
+    return {
+      ...room,
+      statusClass: statusClasses[room.status] || "slds-badge",
+      formattedDate: this.formatDate(room.createdDate)
+    };
+  }
 
-    handleUnsubscribe() {
-        unsubscribe(this.subscription, () => {
-            console.log('Unsubscribed from channel: ', this.channelName);
-        });
-    }
+  formatDate(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
 
-    @api
-    async refresh() {
-        if (!this.wiredRoomsResult) {
-            return;
-        }
-        this.isLoading = true;
-        try {
-            await refreshApex(this.wiredRoomsResult);
-        } catch (error) {
-            this.showToast('Error', 'Failed to refresh rooms', 'error');
-            console.error('Error refreshing rooms:', error);
-        } finally {
-            this.isLoading = false;
-        }
-    }
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
 
-    handleRefreshClick() {
-        this.refresh();
-    }
+    return date.toLocaleDateString();
+  }
 
-    formatRoom(room) {
-        const statusClasses = {
-            'Draft': 'slds-badge slds-badge_lightest',
-            'Active': 'slds-badge slds-theme_success',
-            'Completed': 'slds-badge slds-theme_info'
-        };
+  get isEmpty() {
+    return !this.isLoading && this.rooms.length === 0;
+  }
 
-        return {
-            ...room,
-            statusClass: statusClasses[room.status] || 'slds-badge',
-            formattedDate: this.formatDate(room.createdDate)
-        };
-    }
+  get hasRooms() {
+    return !this.isLoading && this.rooms.length > 0;
+  }
 
-    formatDate(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  get filteredRooms() {
+    return this.rooms.filter((room) => {
+      const matchesSearch =
+        !this.searchTerm ||
+        room.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        room.roomCode.toLowerCase().includes(this.searchTerm.toLowerCase());
 
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
-        if (diffDays < 7) return `${diffDays} days ago`;
+      const matchesStatus =
+        this.statusFilter === "all" || room.status === this.statusFilter;
 
-        return date.toLocaleDateString();
-    }
+      return matchesSearch && matchesStatus;
+    });
+  }
 
-    get isEmpty() {
-        return !this.isLoading && this.rooms.length === 0;
-    }
+  handleSearch(event) {
+    this.searchTerm = event.target.value;
+  }
 
-    get hasRooms() {
-        return !this.isLoading && this.rooms.length > 0;
-    }
+  handleStatusFilter(event) {
+    this.statusFilter = event.detail.value;
+  }
 
-    get filteredRooms() {
-        return this.rooms.filter(room => {
-            const matchesSearch = !this.searchTerm ||
-                room.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                room.roomCode.toLowerCase().includes(this.searchTerm.toLowerCase());
+  handleRoomClick(event) {
+    const roomId = event.currentTarget.dataset.roomId;
+    this.isLoading = true; // Show spinner while transitioning to room
+    this.dispatchEvent(
+      new CustomEvent("roomselect", {
+        detail: { roomId }
+      })
+    );
+  }
 
-            const matchesStatus = this.statusFilter === 'all' ||
-                room.status === this.statusFilter;
+  handleCreateRoom() {
+    this.dispatchEvent(new CustomEvent("createroom"));
+  }
 
-            return matchesSearch && matchesStatus;
-        });
-    }
-
-    handleSearch(event) {
-        this.searchTerm = event.target.value;
-    }
-
-    handleStatusFilter(event) {
-        this.statusFilter = event.detail.value;
-    }
-
-    handleRoomClick(event) {
-        const roomId = event.currentTarget.dataset.roomId;
-        this.isLoading = true; // Show spinner while transitioning to room
-        this.dispatchEvent(new CustomEvent('roomselect', {
-            detail: { roomId }
-        }));
-    }
-
-    handleCreateRoom() {
-        this.dispatchEvent(new CustomEvent('createroom'));
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    showToast(_title, _message, _variant) {
-        // Toast placeholder
-    }
+  // eslint-disable-next-line no-unused-vars
+  showToast(_title, _message, _variant) {
+    // Toast placeholder
+  }
 }

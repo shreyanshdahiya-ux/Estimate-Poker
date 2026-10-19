@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <applicationVisibilities>
         <application>Estimate_Poker</application>
@@ -10,6 +10,10 @@
     </classAccesses>
     <classAccesses>
         <apexClass>GuidanceController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>NamespaceController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -36,11 +40,51 @@
         <apexClass>VotingController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Facilitate_Estimation_Rooms</name>
+    </customPermissions>
     <customMetadataTypeAccesses>
         <enabled>true</enabled>
         <name>Help_Content__mdt</name>
     </customMetadataTypeAccesses>
-    <description>Full administrative access to Estimation Poker application including ability to delete rooms, manage teams, and configure settings.</description>
+    <description
+  >Full administrative access to Estimation Poker application including ability to delete rooms, manage teams, and configure settings.</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Guidance_Feedback__c.Comments__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Guidance_Feedback__c.Rating__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Guidance_Feedback__c.User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>User_Guidance_Progress__c.Completed_Date__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>User_Guidance_Progress__c.Completed__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>User_Guidance_Progress__c.Context__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>User_Guidance_Progress__c.User__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Poker_Room__c.Current_Story__c</field>
@@ -73,11 +117,6 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
-        <field>Estimation_Poker_Room__c.Is_Timer_Enabled__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
         <field>Estimation_Poker_Room__c.Room_Code__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -89,11 +128,6 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Estimation_Poker_Room__c.Status__c</field>
-        <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>true</editable>
-        <field>Estimation_Poker_Room__c.Timer_Duration__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -268,7 +302,26 @@
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>Estimation Poker Admin</label>
-    <license>Salesforce</license>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Guidance_Feedback__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>User_Guidance_Progress__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
     <objectPermissions>
         <allowCreate>true</allowCreate>
         <allowDelete>true</allowDelete>
@@ -287,16 +340,6 @@
         <modifyAllRecords>true</modifyAllRecords>
         <object>Estimation_Vote__c</object>
         <viewAllFields>true</viewAllFields>
-        <viewAllRecords>true</viewAllRecords>
-    </objectPermissions>
-    <objectPermissions>
-        <allowCreate>true</allowCreate>
-        <allowDelete>true</allowDelete>
-        <allowEdit>true</allowEdit>
-        <allowRead>true</allowRead>
-        <modifyAllRecords>true</modifyAllRecords>
-        <object>Help_Article__c</object>
-        <viewAllFields>false</viewAllFields>
         <viewAllRecords>true</viewAllRecords>
     </objectPermissions>
     <objectPermissions>

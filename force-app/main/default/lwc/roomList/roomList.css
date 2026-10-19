@@ -1,187 +1,207 @@
 /* Room Card - Modern Design */
 .room-card {
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 4px solid transparent;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 100%);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-    position: relative;
-    overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.98) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
 }
 
 .room-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .room-card:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(250, 251, 255, 1) 100%);
-    border-left-color: #667eea;
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(250, 251, 255, 1) 100%
+  );
+  border-left-color: #667eea;
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 12px 24px rgba(102, 126, 234, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .room-card:hover::before {
-    opacity: 1;
+  opacity: 1;
 }
 
 .room-card:active {
-    transform: translateY(-2px) scale(1.005);
+  transform: translateY(-2px) scale(1.005);
 }
 
 /* Room Code Badge */
 .room-code {
-    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    padding: 0.25rem 0.625rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Room Meta Section */
 .room-meta {
-    padding-top: 0.75rem;
-    margin-top: 0.75rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.06);
-    display: flex;
-    gap: 1.5rem;
-    color: #64748b;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 1.5rem;
+  color: #64748b;
 }
 
 .room-meta .slds-col {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 /* Room Footer */
 .room-footer {
-    padding-top: 0.75rem;
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    color: #94a3b8;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.375rem 1.5rem;
 }
 
 .room-footer span {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  white-space: nowrap;
 }
 
 /* Empty State */
 .empty-state {
-    min-height: 400px;
-    flex-direction: column;
-    background: linear-gradient(135deg, #fafbff 0%, #f8f9ff 100%);
-    border-radius: 16px;
-    padding: 3rem 2rem;
+  min-height: 400px;
+  flex-direction: column;
+  background: linear-gradient(135deg, #fafbff 0%, #f8f9ff 100%);
+  border-radius: 16px;
+  padding: 3rem 2rem;
 }
 
 .empty-state lightning-icon {
-    color: #667eea;
-    opacity: 0.7;
+  color: #667eea;
+  opacity: 0.7;
 }
 
 .empty-state h2 {
-    color: #1e293b;
-    font-weight: 600;
+  color: #1e293b;
+  font-weight: 600;
 }
 
 .empty-state p {
-    color: #64748b;
-    max-width: 400px;
+  color: #64748b;
+  max-width: 400px;
 }
 
 /* Status Badges - Enhanced */
 .slds-badge {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    font-weight: 700;
-    padding: 0.375rem 0.75rem;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .slds-badge.slds-theme_success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
 }
 
 .slds-badge.slds-theme_warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
 }
 
 .slds-badge.slds-theme_info {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
 }
 
 /* Grid Layout - Responsive */
 .room-grid {
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: 1fr;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
 }
 
 @media (min-width: 768px) {
-    .room-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .room-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (min-width: 1280px) {
-    .room-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
+  .room-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* Room Title Enhancement */
 .room-card h3 {
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 1.125rem;
-    line-height: 1.4;
-    margin-bottom: 0.375rem;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin-bottom: 0.375rem;
 }
 
 .room-card p {
-    color: #64748b;
-    line-height: 1.5;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 /* Chevron Icon */
 .room-card lightning-icon[icon-name="utility:chevronright"] {
-    color: #cbd5e1;
-    transition: all 0.3s ease;
+  color: #cbd5e1;
+  transition: all 0.3s ease;
 }
 
 .room-card:hover lightning-icon[icon-name="utility:chevronright"] {
-    color: #667eea;
-    transform: translateX(4px);
+  color: #667eea;
+  transform: translateX(4px);
 }
 
 /* Filter Section Enhancement */
 .slds-border_bottom {
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
-    backdrop-filter: blur(10px);
-    position: relative;
-    z-index: 10;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.9),
+    rgba(248, 250, 252, 0.9)
+  );
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10;
 }

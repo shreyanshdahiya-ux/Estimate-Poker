@@ -1,167 +1,272 @@
 <template>
-    <lightning-card title="User Stories" icon-name="utility:task">
-        <div slot="actions" class="slds-button-group">
-            <template lwc:if={isFacilitator}>
-                <lightning-button label="Delete All" icon-name="utility:delete" variant="destructive-text" 
-                    onclick={handleDeleteAll} disabled={isDeleteAllDisabled} class="slds-m-right_x-small">
-                </lightning-button>
-            </template>
-            <lightning-button label="Add Story" icon-name="utility:add" variant="brand" onclick={handleAddStory}
-                disabled={isAddDisabled}>
-            </lightning-button>
-        </div>
-        <div class="stories-container">
-            <template lwc:if={stories.length}>
-                <template for:each={stories} for:item="story">
-                    <div key={story.Id} class="story-card"
-                        data-id={story.Id} draggable={isFacilitator}
-                        ondragstart={handleDragStart} ondragend={handleDragEnd}
-                        ondragover={handleDragOver} ondragleave={handleDragLeave} ondrop={handleDrop}>
-                        
-                        <div class="story-card-content">
-                            <template lwc:if={isFacilitator}>
-                                <div class="drag-handle" title="Drag to reorder">
-                                    <lightning-icon icon-name="utility:rows" size="x-small" class="handle-icon"></lightning-icon>
-                                </div>
-                            </template>
-
-                            <div class="story-main">
-                                <div class="story-header">
-                                    <span class="story-index">#{story.Story_Order__c}</span>
-                                    <h3 class="story-title-text" title={story.Story_Title__c}>{story.Story_Title__c}</h3>
-                                </div>
-                                <div class="story-meta">
-                                    <div class={story.statusClass}>
-                                        <lightning-icon icon-name={story.statusIcon} size="xx-small" class="status-icon"></lightning-icon>
-                                        <span>{story.Status__c}</span>
-                                    </div>
-                                    <template lwc:if={story.Final_Estimate__c}>
-                                        <div class="estimate-tag">
-                                            <lightning-icon icon-name="utility: standard_objects" size="xx-small" class="tag-icon"></lightning-icon>
-                                            <span>{story.Final_Estimate__c} Points</span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <template lwc:if={isFacilitator}>
-                                <div class="story-actions">
-                                    <lightning-button-menu alternative-text="Actions" icon-size="x-small"
-                                        menu-alignment="right" variant="border-filled"
-                                        onselect={handleMenuSelect} data-id={story.Id}>
-                                        <lightning-menu-item value="edit" label="Edit Details" icon-name="utility:edit"
-                                            disabled={isRoomCompleted}>
-                                        </lightning-menu-item>
-                                        <lightning-menu-item value="delete" label="Delete Story" icon-name="utility:delete" 
-                                            class="menu-item-destructive" disabled={isRoomCompleted}>
-                                        </lightning-menu-item>
-                                    </lightning-button-menu>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </template>
-            
-            <template lwc:if={noStories}>
-                <div class="empty-state-container">
-                    <div class="empty-state-illustration">
-                        <lightning-icon icon-name="utility:tasks" size="medium" alternative-text="No stories"
-                            class="empty-icon"></lightning-icon>
-                    </div>
-                    <h4>No stories yet</h4>
-                    <p>Add user stories to your room to begin the estimation session.</p>
-                    <lightning-button label="Add First Story" icon-name="utility:add" 
-                        variant="brand-outline" onclick={handleAddStory} class="slds-m-top_medium"
-                        disabled={isAddDisabled}>
-                    </lightning-button>
+  <lightning-card title="User Stories" icon-name="utility:task">
+    <div slot="actions" class="slds-button-group">
+      <template lwc:if={isFacilitator}>
+        <lightning-button
+          label="Delete All"
+          icon-name="utility:delete"
+          variant="destructive-text"
+          onclick={handleDeleteAll}
+          disabled={isDeleteAllDisabled}
+          class="slds-m-right_x-small"
+        >
+        </lightning-button>
+      </template>
+      <template lwc:if={isFacilitator}>
+        <lightning-button
+          label="Add Story"
+          icon-name="utility:add"
+          variant="brand"
+          onclick={handleAddStory}
+          disabled={isAddDisabled}
+        >
+        </lightning-button>
+      </template>
+    </div>
+    <div class="stories-container">
+      <template lwc:if={stories.length}>
+        <template for:each={stories} for:item="story">
+          <div
+            key={story.Id}
+            class="story-card"
+            data-id={story.Id}
+            draggable={isFacilitator}
+            ondragstart={handleDragStart}
+            ondragend={handleDragEnd}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}
+          >
+            <div class="story-card-content">
+              <template lwc:if={isFacilitator}>
+                <div class="drag-handle" title="Drag to reorder">
+                  <lightning-icon
+                    icon-name="utility:rows"
+                    size="x-small"
+                    class="handle-icon"
+                  ></lightning-icon>
                 </div>
-            </template>
-        </div>
-    </lightning-card>
+              </template>
 
-    <!-- Add/Edit Story Modal -->
-    <template lwc:if={showAddModal}>
-        <section class="slds-modal slds-fade-in-open slds-modal_large">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
-                        variant="bare" onclick={closeModal} class="slds-modal__close">
-                    </lightning-button-icon>
-                    <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
-                </header>
-                <div class="slds-modal__content slds-p-around_medium" style="min-height: 400px;">
-                    <!-- Show read-only info when editing -->
-                    <template lwc:if={isEditMode}>
-                        <div class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium">
-                            <div class="slds-grid slds-wrap slds-gutters_small">
-                                <div class="slds-col slds-size_1-of-2">
-                                    <p class="slds-text-title_caps slds-text-color_weak">Order</p>
-                                    <p class="slds-text-body_regular">{editStoryData.Story_Order__c}</p>
-                                </div>
-                                <div class="slds-col slds-size_1-of-2">
-                                    <p class="slds-text-title_caps slds-text-color_weak">Final Estimate</p>
-                                    <p class="slds-text-body_regular">{editStoryData.Final_Estimate__c}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </template>
-
-                    <!-- Editable fields -->
-                    <div class="slds-form">
-                        <div class="slds-grid slds-wrap slds-gutters_small">
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
-                                <lightning-input label="Story Title" value={newStory.title} onchange={handleInputChange}
-                                    data-field="title" required placeholder="Enter story title">
-                                </lightning-input>
-                            </div>
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                                <template lwc:if={isEditMode}>
-                                    <lightning-combobox label="Status" value={newStory.status} options={statusOptions}
-                                        onchange={handleInputChange} data-field="status">
-                                    </lightning-combobox>
-                                </template>
-                            </div>
-                        </div>
-
-
-                        <lightning-input-rich-text 
-                            label="Story Description" 
-                            label-visible
-                            value={newStory.description}
-                            onchange={handleInputChange} 
-                            data-field="description" 
-                            class="slds-m-top_small rich-text-compact"
-                            placeholder="Describe the user story"
-                            formats="bold,italic,underline,strike,list,link,image,table,header,color"
-                            share-with-entity-id={roomId}>
-                        </lightning-input-rich-text>
-
-                        <lightning-input-rich-text 
-                            label="Acceptance Criteria" 
-                            label-visible
-                            value={newStory.acceptanceCriteria}
-                            onchange={handleInputChange} 
-                            data-field="acceptanceCriteria" 
-                            class="slds-m-top_small rich-text-compact"
-                            placeholder="Define the acceptance criteria"
-                            formats="bold,italic,underline,strike,list,link,image,table,header,color"
-                            share-with-entity-id={roomId}>
-                        </lightning-input-rich-text>
-
-                        <lightning-textarea label="Notes" value={newStory.notes} onchange={handleInputChange}
-                            data-field="notes" class="slds-m-top_small" placeholder="Additional notes or comments"
-                            max-length="32000">
-                        </lightning-textarea>
-                    </div>
+              <div class="story-main">
+                <div class="story-header">
+                  <span class="story-index">#{story.Story_Order__c}</span>
+                  <h3 class="story-title-text" title={story.Story_Title__c}>
+                    {story.Story_Title__c}
+                  </h3>
                 </div>
-                <footer class="slds-modal__footer">
-                    <lightning-button label="Cancel" onclick={closeModal}></lightning-button>
-                    <lightning-button label="Save" variant="brand" onclick={handleSaveStory}
-                        class="slds-m-left_x-small"></lightning-button>
-                </footer>
+                <div class="story-meta">
+                  <div class={story.statusClass}>
+                    <lightning-icon
+                      icon-name={story.statusIcon}
+                      size="xx-small"
+                      class="status-icon"
+                    ></lightning-icon>
+                    <span>{story.Status__c}</span>
+                  </div>
+                  <template lwc:if={story.Final_Estimate__c}>
+                    <div class="estimate-tag">
+                      <lightning-icon
+                        icon-name="utility: standard_objects"
+                        size="xx-small"
+                        class="tag-icon"
+                      ></lightning-icon>
+                      <span>{story.Final_Estimate__c} Points</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <template lwc:if={isFacilitator}>
+                <div class="story-actions">
+                  <lightning-button-menu
+                    alternative-text="Actions"
+                    icon-size="x-small"
+                    menu-alignment="right"
+                    variant="border-filled"
+                    onselect={handleMenuSelect}
+                    data-id={story.Id}
+                  >
+                    <lightning-menu-item
+                      value="edit"
+                      label="Edit Details"
+                      icon-name="utility:edit"
+                      disabled={isRoomCompleted}
+                    >
+                    </lightning-menu-item>
+                    <lightning-menu-item
+                      value="delete"
+                      label="Delete Story"
+                      icon-name="utility:delete"
+                      class="menu-item-destructive"
+                      disabled={isRoomCompleted}
+                    >
+                    </lightning-menu-item>
+                  </lightning-button-menu>
+                </div>
+              </template>
             </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+          </div>
+        </template>
+      </template>
+
+      <template lwc:if={noStories}>
+        <div class="empty-state-container">
+          <div class="empty-state-illustration">
+            <lightning-icon
+              icon-name="utility:task"
+              size="large"
+              alternative-text="No stories"
+              class="empty-icon"
+            ></lightning-icon>
+          </div>
+          <h4>No stories yet</h4>
+          <template lwc:if={isFacilitator}>
+            <p>
+              Add user stories to your room to begin the estimation session.
+            </p>
+            <lightning-button
+              label="Add First Story"
+              icon-name="utility:add"
+              variant="brand-outline"
+              onclick={handleAddStory}
+              class="slds-m-top_medium"
+              disabled={isAddDisabled}
+            >
+            </lightning-button>
+          </template>
+          <template lwc:else>
+            <p>The facilitator hasn't added any stories yet.</p>
+          </template>
+        </div>
+      </template>
+    </div>
+  </lightning-card>
+
+  <!-- Add/Edit Story Modal -->
+  <template lwc:if={showAddModal}>
+    <section class="slds-modal slds-fade-in-open slds-modal_large">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            title="Close"
+            variant="bare"
+            onclick={closeModal}
+            class="slds-modal__close"
+          >
+          </lightning-button-icon>
+          <h2 class="slds-modal__title slds-hyphenate">{modalTitle}</h2>
+        </header>
+        <div
+          class="slds-modal__content slds-p-around_medium"
+          style="min-height: 400px"
+        >
+          <!-- Show read-only info when editing -->
+          <template lwc:if={isEditMode}>
+            <div
+              class="slds-box slds-box_x-small slds-theme_shade slds-m-bottom_medium"
+            >
+              <div class="slds-grid slds-wrap slds-gutters_small">
+                <div class="slds-col slds-size_1-of-2">
+                  <p class="slds-text-title_caps slds-text-color_weak">Order</p>
+                  <p class="slds-text-body_regular">
+                    {editStoryData.Story_Order__c}
+                  </p>
+                </div>
+                <div class="slds-col slds-size_1-of-2">
+                  <p class="slds-text-title_caps slds-text-color_weak">
+                    Final Estimate
+                  </p>
+                  <p class="slds-text-body_regular">
+                    {editStoryData.Final_Estimate__c}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Editable fields -->
+          <div class="slds-form">
+            <div class="slds-grid slds-wrap slds-gutters_small">
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_2-of-3">
+                <lightning-input
+                  label="Story Title"
+                  value={newStory.title}
+                  onchange={handleInputChange}
+                  data-field="title"
+                  required
+                  placeholder="Enter story title"
+                >
+                </lightning-input>
+              </div>
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                <template lwc:if={isEditMode}>
+                  <lightning-combobox
+                    label="Status"
+                    value={newStory.status}
+                    options={statusOptions}
+                    onchange={handleInputChange}
+                    data-field="status"
+                  >
+                  </lightning-combobox>
+                </template>
+              </div>
+            </div>
+
+            <lightning-input-rich-text
+              label="Story Description"
+              label-visible
+              value={newStory.description}
+              onchange={handleInputChange}
+              data-field="description"
+              class="slds-m-top_small rich-text-compact"
+              placeholder="Describe the user story"
+              formats="bold,italic,underline,strike,list,link,image,table,header,color"
+              share-with-entity-id={roomId}
+            >
+            </lightning-input-rich-text>
+
+            <lightning-input-rich-text
+              label="Acceptance Criteria"
+              label-visible
+              value={newStory.acceptanceCriteria}
+              onchange={handleInputChange}
+              data-field="acceptanceCriteria"
+              class="slds-m-top_small rich-text-compact"
+              placeholder="Define the acceptance criteria"
+              formats="bold,italic,underline,strike,list,link,image,table,header,color"
+              share-with-entity-id={roomId}
+            >
+            </lightning-input-rich-text>
+
+            <lightning-textarea
+              label="Notes"
+              value={newStory.notes}
+              onchange={handleInputChange}
+              data-field="notes"
+              class="slds-m-top_small"
+              placeholder="Additional notes or comments"
+              max-length="32000"
+            >
+            </lightning-textarea>
+          </div>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button
+            label="Cancel"
+            onclick={closeModal}
+          ></lightning-button>
+          <lightning-button
+            label="Save"
+            variant="brand"
+            onclick={handleSaveStory}
+            class="slds-m-left_x-small"
+          ></lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
 </template>

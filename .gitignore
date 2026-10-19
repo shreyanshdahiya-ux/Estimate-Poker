@@ -52,3 +52,6 @@ deploy_log*
 deployment_output.txt
 org_*.json
 security-report.html
+
+# npm lock file (dev tooling only)
+package-lock.json

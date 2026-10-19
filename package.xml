@@ -1,32 +1,98 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>*</members>
+        <members>EstimationService</members>
+        <members>EstimationServiceTest</members>
+        <members>GuidanceController</members>
+        <members>GuidanceControllerTest</members>
+        <members>NamespaceController</members>
+        <members>NamespaceControllerTest</members>
+        <members>PlatformEventPublisher</members>
+        <members>PlatformEventPublisherTest</members>
+        <members>RoomController</members>
+        <members>RoomControllerTest</members>
+        <members>StoryController</members>
+        <members>StoryControllerTest</members>
+        <members>TeamController</members>
+        <members>TeamControllerTest</members>
+        <members>TestAccess</members>
+        <members>ValidationService</members>
+        <members>ValidationServiceTest</members>
+        <members>VotingController</members>
+        <members>VotingControllerTest</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>*</members>
-        <name>ApexTrigger</name>
+        <members>Estimate_Poker</members>
+        <name>CustomApplication</name>
     </types>
     <types>
-        <members>*</members>
+        <members>Help_Content.Creating_a_Team</members>
+        <members>Help_Content.Managing_Members</members>
+        <members>Help_Content.Team_Roles</members>
+        <members>Help_Content.Teams_Overview</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>Estimation_Poker_Room__c</members>
+        <members>Estimation_Vote__c</members>
+        <members>Guidance_Feedback__c</members>
+        <members>Help_Content__mdt</members>
+        <members>Poker_Presence_Event__e</members>
+        <members>Poker_Room_Event__e</members>
+        <members>Poker_Story_Event__e</members>
+        <members>Poker_Team_Event__e</members>
+        <members>Poker_Vote_Event__e</members>
+        <members>Room_Member__c</members>
+        <members>Team_Member__c</members>
+        <members>Team__c</members>
+        <members>User_Guidance_Progress__c</members>
+        <members>User_Story__c</members>
         <name>CustomObject</name>
     </types>
     <types>
-        <members>*</members>
-        <name>LightningComponentBundle</name>
+        <members>Facilitate_Estimation_Rooms</members>
+        <name>CustomPermission</name>
     </types>
     <types>
-        <members>*</members>
+        <members>Estimation_Poker_Room__c</members>
+        <members>Estimation_Room</members>
+        <members>Team__c</members>
+        <members>User_Story__c</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Estimation_Poker_Room__c-Estimation Poker Room Layout</members>
+        <members>Estimation_Vote__c-Estimation Vote Layout</members>
+        <members>Room_Member__c-Room Member Layout</members>
+        <members>Team_Member__c-Team Member Layout</members>
+        <members>Team__c-Team Layout</members>
+        <members>User_Story__c-User Story Layout</members>
         <name>Layout</name>
     </types>
     <types>
-        <members>*</members>
-        <name>FlexiPage</name>
+        <members>currentStory</members>
+        <members>estimationSession</members>
+        <members>helpPanel</members>
+        <members>nsUtil</members>
+        <members>planningPokerApp</members>
+        <members>pokerCards</members>
+        <members>realtimeEventHandler</members>
+        <members>roomCreation</members>
+        <members>roomDashboard</members>
+        <members>roomList</members>
+        <members>soundPlayer</members>
+        <members>storyManager</members>
+        <members>teamManagement</members>
+        <members>voteResults</members>
+        <members>votingPanel</members>
+        <name>LightningComponentBundle</name>
     </types>
     <types>
-        <members>*</members>
-        <name>CustomTab</name>
+        <members>Estimation_Poker_Admin</members>
+        <members>Estimation_Poker_Facilitator</members>
+        <members>Estimation_Poker_Team_Member</members>
+        <name>PermissionSet</name>
     </types>
-    <version>62.0</version>
+    <version>65.0</version>
 </Package>

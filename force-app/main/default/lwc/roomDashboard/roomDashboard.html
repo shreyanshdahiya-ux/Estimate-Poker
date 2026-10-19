@@ -1,513 +1,745 @@
 <template>
-    <div class="room-dashboard">
-        <!-- Real-time event handler for live updates -->
-        <c-realtime-event-handler room-id={roomId} onstorycreated={handleStoryCreated}
-            onstoryupdated={handleStoryUpdated} onstorydeleted={handleStoryDeleted} onmemberjoined={handleMemberJoined}
-            onmemberleft={handleMemberLeft} onstatusupdated={handleStatusUpdated}
-            onsessionstarted={handleSessionStarted} onsessionended={handleSessionEnded}
-            onsessionpaused={handleSessionPaused} onsessionresumed={handleSessionResumed}
-            onvotereceived={handleVoteEvent} onvoteupdated={handleVoteEvent} onvotedeleted={handleVoteEvent}
-            onvotesrevealed={handleVoteEvent} onvotesreset={handleVoteEvent}
-            onestimatefinalized={handleEstimateFinalized} onpresencechanged={handlePresenceChanged}>
-        </c-realtime-event-handler>
+  <div class="room-dashboard">
+    <!-- Real-time event handler for live updates -->
+    <c-realtime-event-handler
+      room-id={roomId}
+      onstorycreated={handleStoryCreated}
+      onstoryupdated={handleStoryUpdated}
+      onstorydeleted={handleStoryDeleted}
+      onmemberjoined={handleMemberJoined}
+      onmemberleft={handleMemberLeft}
+      onstatusupdated={handleStatusUpdated}
+      onsessionstarted={handleSessionStarted}
+      onsessionended={handleSessionEnded}
+      onsessionpaused={handleSessionPaused}
+      onsessionresumed={handleSessionResumed}
+      onvotereceived={handleVoteEvent}
+      onvoteupdated={handleVoteEvent}
+      onvotedeleted={handleVoteEvent}
+      onvotesrevealed={handleVoteEvent}
+      onvotesreset={handleVoteEvent}
+      onestimatefinalized={handleEstimateFinalized}
+      onpresencechanged={handlePresenceChanged}
+    >
+    </c-realtime-event-handler>
 
-        <!-- <template lwc:if={isLoading}>
+    <!-- <template lwc:if={isLoading}>
             <div class="loading-overlay">
                 <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
             </div>
         </template> -->
-        <template lwc:if={isLoading}>
-            <lightning-spinner
-                if:true={isLoading}
-                alternative-text="Loading"
-                size="medium">
-            </lightning-spinner>
-        </template>
-
-        <template lwc:if={hasRoomData}>
-            <!-- Header -->
-            <div class="dashboard-header slds-var-m-bottom_medium">
-                <div class="slds-grid slds-grid_vertical-align-center">
-                    <lightning-button-icon icon-name="utility:back" variant="bare-inverse" onclick={handleBack}
-                        alternative-text="Back" title="Back" aria-label="Back" class="slds-var-m-right_small">
-                    </lightning-button-icon>
-                    <div class="slds-col">
-                        <h1 class="slds-text-heading_large">{roomName}</h1>
-                        <div class="slds-var-m-top_small header-badges">
-                            <span class="room-code-badge">{roomCode}</span>
-                            <span class={statusBadgeClass}>{roomStatus}</span>
-                            <!-- Session Duration Timer for Active/Paused sessions -->
-                            <template lwc:if={showSessionTimer}>
-                                <span class="session-timer-badge" title="Session Duration">
-                                    <lightning-icon icon-name="utility:clock" size="xx-small"
-                                        class="timer-icon"></lightning-icon>
-                                    <span class="timer-value">{liveSessionDuration}</span>
-                                </span>
-                            </template>
-                        </div>
-                    </div>
-                    <div class="slds-col_bump-left slds-grid slds-grid_vertical-align-center">
-                        <!-- Start Session - Only for Draft rooms (Facilitator only) -->
-                        <template lwc:if={canStartSession}>
-                            <lightning-button label="Start Session" variant="success" icon-name="utility:play"
-                                onclick={handleStartSession}>
-                            </lightning-button>
-                        </template>
-                        <!-- Resume Session - Only for Paused rooms (Facilitator only) -->
-                        <template lwc:if={canResumeSession}>
-                            <lightning-button label="Resume Session" variant="success" icon-name="utility:play"
-                                onclick={handleResumeSession}>
-                            </lightning-button>
-                        </template>
-                        <!-- Enter Session - For Active rooms (All members) -->
-                        <template lwc:if={canEnterSession}>
-                            <lightning-button label="Enter Session" variant="brand" icon-name="utility:right"
-                                onclick={handleEnterSession}>
-                            </lightning-button>
-                        </template>
-                        <!-- Completed badge -->
-                        <template lwc:if={isSessionCompleted}>
-                            <span class="slds-badge slds-theme_success slds-var-m-left_small">Session Completed</span>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </template>
-
-        <!-- Error State -->
-        <template lwc:if={error}>
-            <div class="slds-illustration slds-illustration_large slds-var-p-around_large">
-                <img src="/img/chatter/OpenRoad.svg" class="slds-illustration__svg" alt="" />
-                <div class="slds-text-longform">
-                    <h3 class="slds-text-heading_medium">Something went wrong</h3>
-                    <p class="slds-text-body_regular">{error.body.message}</p>
-                </div>
-                <div class="slds-var-m-top_medium">
-                    <lightning-button label="Back to List" onclick={handleBack} variant="neutral"></lightning-button>
-                </div>
-            </div>
-        </template>
-
-        <!-- Empty State (No Data) -->
-        <template lwc:if={showEmptyState}>
-            <div class="slds-illustration slds-illustration_large slds-var-p-around_large">
-                <div class="slds-text-longform">
-                    <h3 class="slds-text-heading_medium">Room Not Found</h3>
-                    <p class="slds-text-body_regular">We couldn't find the details for this room.</p>
-                </div>
-                <div class="slds-var-m-top_medium">
-                    <lightning-button label="Back to List" onclick={handleBack} variant="neutral"></lightning-button>
-                </div>
-            </div>
-        </template>
-
-        <template lwc:if={hasRoomData}>
-
-            <template lwc:if={shouldShowResults}>
-                <div class="slds-box slds-theme_shade slds-var-m-bottom_medium results-container"
-                    style="grid-column: 1 / -1;">
-                    <div class="results-header-elite">
-                        <div class="slds-text-heading_medium elite-title">Session Intelligence</div>
-                    </div>
-                    
-                    <div class="slds-grid slds-wrap slds-gutters slds-var-p-top_small results-grid-elite">
-
-                        <!-- Progress Density (Elite Dual-Ring Pie) -->
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                            <div class="chart-card-elite glass-card entrance-anim-1">
-                                <div class="card-bg-decoration radial-glow"></div>
-                                <h3 class="chart-title-elite">
-                                    <lightning-icon icon-name="utility:graph" size="xx-small" class="title-icon"></lightning-icon>
-                                    <span>Progress Density</span>
-                                    <lightning-helptext class="chart-info-helptext"
-                                        content="Share of stories that are estimated vs. still pending. The outer ring fills clockwise as more stories get finalized. The center number is the percentage of stories the team has finished estimating.">
-                                    </lightning-helptext>
-                                </h3>
-                                <div class="pie-viz-elite">
-                                    <div class="pie-ring-outer" style={pieChartStyle}>
-                                        <div class="pie-ring-inner">
-                                            <div class="pie-content-elite">
-                                                <span class="pie-main-val">{pieChartData.estimatedPercent}%</span>
-                                                <span class="pie-sub-txt">Completed</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="pie-legend-elite">
-                                        <div class="legend-pill ready">
-                                            <span class="pill-dot"></span>
-                                            <span class="pill-val">{pieChartData.estimated}</span>
-                                            <span class="pill-lab">Estimated</span>
-                                        </div>
-                                        <div class="legend-pill pending">
-                                            <span class="pill-dot"></span>
-                                            <span class="pill-val">{pieChartData.pending}</span>
-                                            <span class="pill-lab">Pending</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Estimate Spread (Elite Neon Bar) -->
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                            <div class="chart-card-elite glass-card entrance-anim-2">
-                                <div class="card-bg-decoration grid-pattern"></div>
-                                <h3 class="chart-title-elite">
-                                    <lightning-icon icon-name="utility:chart" size="xx-small" class="title-icon"></lightning-icon>
-                                    <span>Estimate Spread</span>
-                                    <lightning-helptext class="chart-info-helptext"
-                                        content="Stories finalized at each estimate value. The number on each bar is the story count; the pill below is the estimate (story points). The most-used estimate is marked with a star.">
-                                    </lightning-helptext>
-                                </h3>
-                                <template lwc:if={hasChartData}>
-                                    <div class="bar-viz-elite-container">
-                                        <!-- Vertical Grid Backdrop -->
-                                        <div class="chart-grid-backdrop">
-                                            <div class="grid-line"></div>
-                                            <div class="grid-line"></div>
-                                            <div class="grid-line"></div>
-                                            <div class="grid-line"></div>
-                                        </div>
-
-                                        <div class="bar-viz-elite">
-                                            <template for:each={storyEstimatesForChart} for:item="item">
-                                                <div key={item.estimate} class={item.itemClass} style={item.barStyle}>
-                                                    <div class="bar-elite-neon">
-                                                        <template lwc:if={item.isConsensus}>
-                                                            <div class="hero-badge" title="Consensus Hero">⭐</div>
-                                                        </template>
-                                                        <div class="bar-val-hint">{item.count}</div>
-                                                        
-                                                        <!-- Advanced Floating Tooltip -->
-                                                        <div class="bar-ux-tooltip">
-                                                            <span class="ux-tip-main">{item.tooltipMain}</span>
-                                                            <span class="ux-tip-sub">{item.tooltipSub}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="est-capsule">{item.estimate}</div>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                                <template lwc:else>
-                                    <div class="empty-viz-placeholder">No session data recorded</div>
-                                </template>
-                            </div>
-                        </div>
-
-                        <!-- Session DNA (Elite Jewel Stats) -->
-                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                            <div class="chart-card-elite glass-card entrance-anim-3">
-                                <h3 class="chart-title-elite">
-                                    <lightning-icon icon-name="utility:database" size="xx-small" class="title-icon"></lightning-icon>
-                                    Session DNA
-                                </h3>
-                                <div class="jewel-stats-grid">
-                                    <div class="stat-jewel">
-                                        <div class="jewel-icon-box blue">
-                                            <lightning-icon icon-name="utility:metrics" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="jewel-data">
-                                            <span class="jewel-val">{averageEstimate}</span>
-                                            <span class="jewel-lab">Avg Points</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-jewel">
-                                        <div class="jewel-icon-box green">
-                                            <lightning-icon icon-name="utility:groups" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="jewel-data">
-                                            <span class="jewel-val">{votingMembers}</span>
-                                            <span class="jewel-lab">Voters</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-jewel">
-                                        <div class="jewel-icon-box indigo">
-                                            <lightning-icon icon-name="utility:task" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="jewel-data">
-                                            <span class="jewel-val">{estimatedStories}</span>
-                                            <span class="jewel-lab">Completed</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-jewel">
-                                        <div class="jewel-icon-box amber">
-                                            <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="jewel-data">
-                                            <span class="jewel-val">{liveSessionDuration}</span>
-                                            <span class="jewel-lab">Duration</span>
-                                        </div>
-                                    </div>
-                                    <div class="stat-jewel highlight-jewel">
-                                        <div class="jewel-icon-box violet">
-                                            <lightning-icon icon-name="utility:priority" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="jewel-data">
-                                            <span class="jewel-val">{complexityScore}</span>
-                                            <span class="jewel-lab">Complexity</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Vote History Section -->
-            <template lwc:if={shouldShowVoteHistory}>
-                <div class="vote-history-section">
-                    <div class="section-header">
-                        <span class="section-title">
-                            <lightning-icon icon-name="utility:clock" size="x-small" variant="inverse"></lightning-icon>
-                            Vote History
-                        </span>
-                        <lightning-button-icon icon-name="utility:refresh" variant="border-filled"
-                            onclick={loadVoteHistory} alternative-text="Refresh History" title="Refresh History">
-                        </lightning-button-icon>
-                    </div>
-
-                    <template lwc:if={isLoadingHistory}>
-                        <div class="history-loading">
-                            <lightning-spinner alternative-text="Loading history" size="small"></lightning-spinner>
-                        </div>
-                    </template>
-
-                    <template lwc:if={hasVoteHistory}>
-                        <div class="history-list dense-mode">
-                            <template for:each={voteHistory} for:item="historyItem">
-                                <div key={historyItem.storyId} class="history-item">
-                                    <!-- Story Header (High-Density) -->
-                                    <div class="history-item-header high-density" data-story-id={historyItem.storyId}
-                                        onclick={handleToggleStoryExpand}>
-                                        <div class="status-indicator" style={historyItem.statusStyle}></div>
-                                        <div class="history-expand-icon">
-                                            <lightning-icon icon-name={historyItem.expandIcon}
-                                                size="xxx-small"></lightning-icon>
-                                        </div>
-                                        <div class="history-story-info">
-                                            <p class="history-story-title slds-truncate">{historyItem.storyTitle}</p>
-                                            <div class="history-story-meta">
-                                                <template lwc:if={historyItem.finalEstimate}>
-                                                    <span class="history-estimate-badge-mini">{historyItem.finalEstimate}</span>
-                                                </template>
-                                                <span class="history-vote-count-mini">{historyItem.voteCount} votes</span>
-                                                <template lwc:if={historyItem.formattedDate}>
-                                                    <span class="history-date-mini">{historyItem.formattedDate}</span>
-                                                </template>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Expanded Vote Details (High-Density) -->
-                                    <template lwc:if={historyItem.isExpanded}>
-                                        <div class="history-votes-container-dense">
-                                            <template lwc:if={historyItem.hasVotes}>
-                                                <template for:each={historyItem.votes} for:item="vote">
-                                                    <div key={vote.odataUserId} class="history-vote-row">
-                                                        <div class="vote-voter-info-mini">
-                                                            <template lwc:if={vote.voterPhoto}>
-                                                                <img src={vote.voterPhoto} class="voter-avatar-mini" />
-                                                            </template>
-                                                            <span class="vote-voter-name-mini">{vote.voterName}</span>
-                                                        </div>
-                                                        <div class="vote-data-ribbon">
-                                                            <span class="vote-val-mini">{vote.voteValue}</span>
-                                                            <template lwc:if={vote.confidenceLabel}>
-                                                                <span class={vote.confidenceClass}>{vote.confidenceLabel}</span>
-                                                            </template>
-                                                            <template lwc:if={vote.formattedDuration}>
-                                                                <span class="vote-meta-txt">⏱️ {vote.formattedDuration}</span>
-                                                            </template>
-                                                            <span class="vote-meta-txt">{vote.formattedTime}</span>
-                                                        </div>
-                                                        <template lwc:if={vote.hasComment}>
-                                                            <div class="vote-comment-mini" title={vote.comment}>
-                                                                <lightning-icon icon-name="utility:comments" size="xxx-small"></lightning-icon>
-                                                                <span class="comment-peek">{vote.comment}</span>
-                                                            </div>
-                                                        </template>
-                                                    </div>
-                                                </template>
-                                            </template>
-                                            <template lwc:else>
-                                                <div class="no-votes-message-mini">No vote details available</div>
-                                            </template>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
-
-                    <template lwc:if={noVoteHistory}>
-                        <div class="empty-state">
-                            <lightning-icon icon-name="utility:clock" size="large"
-                                class="empty-state-icon"></lightning-icon>
-                            <p>No vote history yet</p>
-                            <p class="empty-state-subtitle">Vote history will appear here after stories are estimated
-                            </p>
-                        </div>
-                    </template>
-                </div>
-            </template>
-
-            <!-- Main Content -->
-            <div class="content-area">
-                <!-- Stories Section -->
-                <div class="stories-section">
-                    <c-story-manager room-id={roomId} stories={stories} is-facilitator={roomDetails.isFacilitator}
-                        is-room-completed={isSessionCompleted} onstorycreated={handleRefresh}
-                        onstorydeleted={handleRefresh} onstoryreordered={handleRefresh}>
-                    </c-story-manager>
-                </div>
-
-                <!-- Members Section -->
-                <div class="members-section">
-                    <div class="section-header">
-                        <span class="section-title">
-                            <lightning-icon icon-name="utility:groups" size="x-small"
-                                variant="inverse"></lightning-icon>
-                            Room Members
-                        </span>
-                        <lightning-button-icon icon-name="utility:add" variant="border-filled"
-                            onclick={handleAddMembers} alternative-text="Add Member" title="Add Member"
-                            aria-label="Add Member" disabled={isAddMembersDisabled}>
-                        </lightning-button-icon>
-                    </div>
-                    <div class="members-list">
-                        <template lwc:if={hasMembers}>
-                            <template for:each={processedMembers} for:item="member">
-                                <div key={member.Id} class="member-item">
-                                    <div class="member-avatar-container">
-                                        <template lwc:if={member.User__r}>
-                                            <lightning-avatar src={member.User__r.SmallPhotoUrl}
-                                                fallback-icon-name="standard:user" size="small">
-                                            </lightning-avatar>
-                                        </template>
-                                        <template lwc:else>
-                                            <lightning-avatar fallback-icon-name="standard:user" size="small">
-                                            </lightning-avatar>
-                                        </template>
-                                        <!-- Blue tick indicator for users in session -->
-                                        <template lwc:if={member.isInSession}>
-                                            <span class="in-session-tick" title="In Session">
-                                                <lightning-icon icon-name="utility:check" size="xx-small"
-                                                    variant="inverse"></lightning-icon>
-                                            </span>
-                                        </template>
-                                    </div>
-                                    <div class="member-info">
-                                        <div class="member-name-row">
-                                            <p class="member-name">{member.userNameDisplay}</p>
-                                        </div>
-                                        <p class="member-role">{member.roleDisplay}</p>
-                                        <!-- Time info -->
-                                        <template lwc:if={member.lastActivityDisplay}>
-                                            <p class="member-time">
-                                                <lightning-icon icon-name="utility:clock" size="xx-small"
-                                                    class="time-icon"></lightning-icon>
-                                                {member.lastActivityDisplay}
-                                            </p>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                        </template>
-                        <template lwc:else>
-                            <div class="empty-state">
-                                <lightning-icon icon-name="utility:user" size="large"
-                                    class="empty-state-icon"></lightning-icon>
-                                <p>No members yet</p>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-        </template>
-    </div>
-
-    <!-- Add Members Modal -->
-    <template lwc:if={showAddMembersModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <lightning-button-icon icon-name="utility:close" alternative-text="Close" title="Close"
-                        variant="bare" onclick={handleCloseAddMembersModal} class="slds-modal__close">
-                    </lightning-button-icon>
-                    <h2 class="slds-modal__title slds-hyphenate">Invite Members</h2>
-                </header>
-                <div class="slds-modal__content slds-var-p-around_medium">
-                    <!-- Search Input -->
-                    <lightning-input type="search" label="Search Users" placeholder="Search by name or email..."
-                        value={searchTerm} onchange={handleSearchChange}>
-                    </lightning-input>
-
-                    <!-- Search Results -->
-                    <template lwc:if={isSearching}>
-                        <div class="slds-align_absolute-center slds-var-m-top_medium">
-                            <lightning-spinner alternative-text="Searching" size="small"></lightning-spinner>
-                        </div>
-                    </template>
-
-                    <template lwc:if={hasSearchResults}>
-                        <div class="slds-var-m-top_medium">
-                            <p class="slds-text-body_small slds-var-m-bottom_x-small">Search Results</p>
-                            <ul class="slds-has-dividers_bottom-space">
-                                <template for:each={searchResults} for:item="user">
-                                    <li key={user.Id} class="slds-item slds-var-p-vertical_x-small">
-                                        <div class="slds-grid slds-grid_vertical-align-center">
-                                            <lightning-avatar src={user.SmallPhotoUrl}
-                                                fallback-icon-name="standard:user" size="small"
-                                                class="slds-var-m-right_small">
-                                            </lightning-avatar>
-                                            <div class="slds-col slds-grow">
-                                                <p class="slds-text-body_regular">{user.Name}</p>
-                                                <p class="slds-text-body_small slds-text-color_weak">{user.Email}</p>
-                                            </div>
-                                            <lightning-button label="Add" variant="brand" data-user-id={user.Id}
-                                                onclick={handleAddUser} disabled={user.isAlreadyMember}>
-                                            </lightning-button>
-                                        </div>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
-                    </template>
-
-                    <template lwc:if={noSearchResults}>
-                        <div class="slds-align_absolute-center slds-var-m-top_medium slds-text-color_weak">
-                            No users found
-                        </div>
-                    </template>
-
-                    <!-- Selected Members -->
-                    <template lwc:if={hasSelectedMembers}>
-                        <div class="slds-var-m-top_medium">
-                            <p class="slds-text-body_small slds-var-m-bottom_x-small">Selected Members
-                                ({selectedMembersCount})</p>
-                            <div class="slds-list_horizontal slds-wrap">
-                                <template for:each={selectedMembers} for:item="member">
-                                    <lightning-pill key={member.Id} label={member.Name} name={member.Id}
-                                        onremove={handleRemoveSelectedMember}>
-                                    </lightning-pill>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-                <footer class="slds-modal__footer">
-                    <lightning-button label="Cancel" onclick={handleCloseAddMembersModal}>
-                    </lightning-button>
-                    <lightning-button label="Add Selected Members" variant="brand" onclick={handleSaveMembers}
-                        disabled={noSelectedMembers} class="slds-var-m-left_small">
-                    </lightning-button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
+    <template lwc:if={isLoading}>
+      <lightning-spinner
+        if:true={isLoading}
+        alternative-text="Loading"
+        size="medium"
+      >
+      </lightning-spinner>
     </template>
+
+    <template lwc:if={hasRoomData}>
+      <!-- Header -->
+      <div class="dashboard-header slds-var-m-bottom_medium">
+        <div class="slds-grid slds-grid_vertical-align-center">
+          <lightning-button-icon
+            icon-name="utility:back"
+            variant="bare-inverse"
+            onclick={handleBack}
+            alternative-text="Back"
+            title="Back"
+            aria-label="Back"
+            class="slds-var-m-right_small"
+          >
+          </lightning-button-icon>
+          <div class="slds-col">
+            <h1 class="slds-text-heading_large">{roomName}</h1>
+            <div class="slds-var-m-top_small header-badges">
+              <span class="room-code-badge">{roomCode}</span>
+              <span class={statusBadgeClass}>{roomStatus}</span>
+              <!-- Session Duration Timer for Active/Paused sessions -->
+              <template lwc:if={showSessionTimer}>
+                <span class="session-timer-badge" title="Session Duration">
+                  <lightning-icon
+                    icon-name="utility:clock"
+                    size="xx-small"
+                    class="timer-icon"
+                  ></lightning-icon>
+                  <span class="timer-value">{liveSessionDuration}</span>
+                </span>
+              </template>
+            </div>
+          </div>
+          <div
+            class="slds-col_bump-left slds-grid slds-grid_vertical-align-center"
+          >
+            <!-- Start Session - Only for Draft rooms (Facilitator only) -->
+            <template lwc:if={canStartSession}>
+              <lightning-button
+                label="Start Session"
+                variant="success"
+                icon-name="utility:play"
+                onclick={handleStartSession}
+              >
+              </lightning-button>
+            </template>
+            <!-- Resume Session - Only for Paused rooms (Facilitator only) -->
+            <template lwc:if={canResumeSession}>
+              <lightning-button
+                label="Resume Session"
+                variant="success"
+                icon-name="utility:play"
+                onclick={handleResumeSession}
+              >
+              </lightning-button>
+            </template>
+            <!-- Enter Session - For Active rooms (All members) -->
+            <template lwc:if={canEnterSession}>
+              <lightning-button
+                label="Enter Session"
+                variant="brand"
+                icon-name="utility:right"
+                onclick={handleEnterSession}
+              >
+              </lightning-button>
+            </template>
+            <!-- Completed badge -->
+            <template lwc:if={isSessionCompleted}>
+              <span class="slds-badge slds-theme_success slds-var-m-left_small"
+                >Session Completed</span
+              >
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Error State -->
+    <template lwc:if={error}>
+      <div
+        class="slds-illustration slds-illustration_large slds-var-p-around_large"
+      >
+        <img
+          src="/img/chatter/OpenRoad.svg"
+          class="slds-illustration__svg"
+          alt=""
+        />
+        <div class="slds-text-longform">
+          <h3 class="slds-text-heading_medium">Something went wrong</h3>
+          <p class="slds-text-body_regular">{error.body.message}</p>
+        </div>
+        <div class="slds-var-m-top_medium">
+          <lightning-button
+            label="Back to List"
+            onclick={handleBack}
+            variant="neutral"
+          ></lightning-button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Empty State (No Data) -->
+    <template lwc:if={showEmptyState}>
+      <div
+        class="slds-illustration slds-illustration_large slds-var-p-around_large"
+      >
+        <div class="slds-text-longform">
+          <h3 class="slds-text-heading_medium">Room Not Found</h3>
+          <p class="slds-text-body_regular">
+            We couldn't find the details for this room.
+          </p>
+        </div>
+        <div class="slds-var-m-top_medium">
+          <lightning-button
+            label="Back to List"
+            onclick={handleBack}
+            variant="neutral"
+          ></lightning-button>
+        </div>
+      </div>
+    </template>
+
+    <template lwc:if={hasRoomData}>
+      <template lwc:if={shouldShowResults}>
+        <div
+          class="slds-box slds-theme_shade slds-var-m-bottom_medium results-container"
+          style="grid-column: 1 / -1"
+        >
+          <div class="results-header-elite">
+            <div class="slds-text-heading_medium elite-title">
+              Session Intelligence
+            </div>
+          </div>
+
+          <div
+            class="slds-grid slds-wrap slds-gutters slds-var-p-top_small results-grid-elite"
+          >
+            <!-- Progress Density (Elite Dual-Ring Pie) -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+              <div class="chart-card-elite glass-card entrance-anim-1">
+                <div class="card-bg-decoration radial-glow"></div>
+                <h3 class="chart-title-elite">
+                  <lightning-icon
+                    icon-name="utility:graph"
+                    size="xx-small"
+                    class="title-icon"
+                  ></lightning-icon>
+                  <span>Progress Density</span>
+                  <lightning-helptext
+                    class="chart-info-helptext"
+                    content="Share of stories that are estimated vs. still pending. The outer ring fills clockwise as more stories get finalized. The center number is the percentage of stories the team has finished estimating."
+                  >
+                  </lightning-helptext>
+                </h3>
+                <div class="pie-viz-elite">
+                  <div class="pie-ring-outer" style={pieChartStyle}>
+                    <div class="pie-ring-inner">
+                      <div class="pie-content-elite">
+                        <span class="pie-main-val"
+                          >{pieChartData.estimatedPercent}%</span
+                        >
+                        <span class="pie-sub-txt">Completed</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pie-legend-elite">
+                    <div class="legend-pill ready">
+                      <span class="pill-dot"></span>
+                      <span class="pill-val">{pieChartData.estimated}</span>
+                      <span class="pill-lab">Estimated</span>
+                    </div>
+                    <div class="legend-pill pending">
+                      <span class="pill-dot"></span>
+                      <span class="pill-val">{pieChartData.pending}</span>
+                      <span class="pill-lab">Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estimate Spread (Elite Neon Bar) -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+              <div class="chart-card-elite glass-card entrance-anim-2">
+                <div class="card-bg-decoration grid-pattern"></div>
+                <h3 class="chart-title-elite">
+                  <lightning-icon
+                    icon-name="utility:chart"
+                    size="xx-small"
+                    class="title-icon"
+                  ></lightning-icon>
+                  <span>Estimate Spread</span>
+                  <lightning-helptext
+                    class="chart-info-helptext"
+                    content="Stories finalized at each estimate value. The number on each bar is the story count; the pill below is the estimate (story points). The most-used estimate is marked with a star."
+                  >
+                  </lightning-helptext>
+                </h3>
+                <template lwc:if={hasChartData}>
+                  <div class="bar-viz-elite-container">
+                    <!-- Vertical Grid Backdrop -->
+                    <div class="chart-grid-backdrop">
+                      <div class="grid-line"></div>
+                      <div class="grid-line"></div>
+                      <div class="grid-line"></div>
+                      <div class="grid-line"></div>
+                    </div>
+
+                    <div class="bar-viz-elite">
+                      <template
+                        for:each={storyEstimatesForChart}
+                        for:item="item"
+                      >
+                        <div
+                          key={item.estimate}
+                          class={item.itemClass}
+                          style={item.barStyle}
+                        >
+                          <div class="bar-elite-neon">
+                            <template lwc:if={item.isConsensus}>
+                              <div class="hero-badge" title="Consensus Hero">
+                                ⭐
+                              </div>
+                            </template>
+                            <div class="bar-val-hint">{item.count}</div>
+
+                            <!-- Advanced Floating Tooltip -->
+                            <div class="bar-ux-tooltip">
+                              <span class="ux-tip-main"
+                                >{item.tooltipMain}</span
+                              >
+                              <span class="ux-tip-sub">{item.tooltipSub}</span>
+                            </div>
+                          </div>
+                          <div class="est-capsule">{item.estimate}</div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+                <template lwc:else>
+                  <div class="empty-viz-placeholder">
+                    No session data recorded
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- Session DNA (Elite Jewel Stats) -->
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+              <div class="chart-card-elite glass-card entrance-anim-3">
+                <h3 class="chart-title-elite">
+                  <lightning-icon
+                    icon-name="utility:database"
+                    size="xx-small"
+                    class="title-icon"
+                  ></lightning-icon>
+                  Session DNA
+                </h3>
+                <div class="jewel-stats-grid">
+                  <div class="stat-jewel">
+                    <div class="jewel-icon-box blue">
+                      <lightning-icon
+                        icon-name="utility:metrics"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="jewel-data">
+                      <span class="jewel-val">{averageEstimate}</span>
+                      <span class="jewel-lab">Avg Points</span>
+                    </div>
+                  </div>
+                  <div class="stat-jewel">
+                    <div class="jewel-icon-box green">
+                      <lightning-icon
+                        icon-name="utility:groups"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="jewel-data">
+                      <span class="jewel-val">{votingMembers}</span>
+                      <span class="jewel-lab">Voters</span>
+                    </div>
+                  </div>
+                  <div class="stat-jewel">
+                    <div class="jewel-icon-box indigo">
+                      <lightning-icon
+                        icon-name="utility:task"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="jewel-data">
+                      <span class="jewel-val">{estimatedStories}</span>
+                      <span class="jewel-lab">Completed</span>
+                    </div>
+                  </div>
+                  <div class="stat-jewel">
+                    <div class="jewel-icon-box amber">
+                      <lightning-icon
+                        icon-name="utility:clock"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="jewel-data">
+                      <span class="jewel-val">{liveSessionDuration}</span>
+                      <span class="jewel-lab">Duration</span>
+                    </div>
+                  </div>
+                  <div class="stat-jewel highlight-jewel">
+                    <div class="jewel-icon-box violet">
+                      <lightning-icon
+                        icon-name="utility:priority"
+                        size="small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="jewel-data">
+                      <span class="jewel-val">{complexityScore}</span>
+                      <span class="jewel-lab">Complexity</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Vote History Section -->
+      <template lwc:if={shouldShowVoteHistory}>
+        <div class="vote-history-section">
+          <div class="section-header">
+            <span class="section-title">
+              <lightning-icon
+                icon-name="utility:clock"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+              Vote History
+            </span>
+            <lightning-button-icon
+              icon-name="utility:refresh"
+              variant="border-filled"
+              onclick={loadVoteHistory}
+              alternative-text="Refresh History"
+              title="Refresh History"
+            >
+            </lightning-button-icon>
+          </div>
+
+          <template lwc:if={isLoadingHistory}>
+            <div class="history-loading">
+              <lightning-spinner
+                alternative-text="Loading history"
+                size="small"
+              ></lightning-spinner>
+            </div>
+          </template>
+
+          <template lwc:if={hasVoteHistory}>
+            <div class="history-list dense-mode">
+              <template for:each={voteHistory} for:item="historyItem">
+                <div key={historyItem.storyId} class="history-item">
+                  <!-- Story Header (High-Density) -->
+                  <div
+                    class="history-item-header high-density"
+                    data-story-id={historyItem.storyId}
+                    onclick={handleToggleStoryExpand}
+                  >
+                    <div
+                      class="status-indicator"
+                      style={historyItem.statusStyle}
+                    ></div>
+                    <div class="history-expand-icon">
+                      <lightning-icon
+                        icon-name={historyItem.expandIcon}
+                        size="xxx-small"
+                      ></lightning-icon>
+                    </div>
+                    <div class="history-story-info">
+                      <p class="history-story-title slds-truncate">
+                        {historyItem.storyTitle}
+                      </p>
+                      <div class="history-story-meta">
+                        <template lwc:if={historyItem.finalEstimate}>
+                          <span class="history-estimate-badge-mini"
+                            >{historyItem.finalEstimate}</span
+                          >
+                        </template>
+                        <span class="history-vote-count-mini"
+                          >{historyItem.voteCount} votes</span
+                        >
+                        <template lwc:if={historyItem.formattedDate}>
+                          <span class="history-date-mini"
+                            >{historyItem.formattedDate}</span
+                          >
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Expanded Vote Details (High-Density) -->
+                  <template lwc:if={historyItem.isExpanded}>
+                    <div class="history-votes-container-dense">
+                      <template lwc:if={historyItem.hasVotes}>
+                        <template for:each={historyItem.votes} for:item="vote">
+                          <div key={vote.odataUserId} class="history-vote-row">
+                            <div class="vote-voter-info-mini">
+                              <template lwc:if={vote.voterPhoto}>
+                                <img
+                                  src={vote.voterPhoto}
+                                  class="voter-avatar-mini"
+                                />
+                              </template>
+                              <span class="vote-voter-name-mini"
+                                >{vote.voterName}</span
+                              >
+                            </div>
+                            <div class="vote-data-ribbon">
+                              <span class="vote-val-mini"
+                                >{vote.voteValue}</span
+                              >
+                              <template lwc:if={vote.confidenceLabel}>
+                                <span class={vote.confidenceClass}
+                                  >{vote.confidenceLabel}</span
+                                >
+                              </template>
+                              <template lwc:if={vote.formattedDuration}>
+                                <span class="vote-meta-txt"
+                                  >⏱️ {vote.formattedDuration}</span
+                                >
+                              </template>
+                              <span class="vote-meta-txt"
+                                >{vote.formattedTime}</span
+                              >
+                            </div>
+                            <template lwc:if={vote.hasComment}>
+                              <div
+                                class="vote-comment-mini"
+                                title={vote.comment}
+                              >
+                                <lightning-icon
+                                  icon-name="utility:comments"
+                                  size="xxx-small"
+                                ></lightning-icon>
+                                <span class="comment-peek">{vote.comment}</span>
+                              </div>
+                            </template>
+                          </div>
+                        </template>
+                      </template>
+                      <template lwc:else>
+                        <div class="no-votes-message-mini">
+                          No vote details available
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+
+          <template lwc:if={noVoteHistory}>
+            <div class="empty-state">
+              <lightning-icon
+                icon-name="utility:clock"
+                size="large"
+                class="empty-state-icon"
+              ></lightning-icon>
+              <p>No vote history yet</p>
+              <p class="empty-state-subtitle">
+                Vote history will appear here after stories are estimated
+              </p>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Main Content -->
+      <div class="content-area">
+        <!-- Stories Section -->
+        <div class="stories-section">
+          <c-story-manager
+            room-id={roomId}
+            stories={stories}
+            is-facilitator={roomDetails.isFacilitator}
+            is-room-completed={isSessionCompleted}
+            onstorycreated={handleRefresh}
+            onstorydeleted={handleRefresh}
+            onstoryreordered={handleRefresh}
+          >
+          </c-story-manager>
+        </div>
+
+        <!-- Members Section -->
+        <div class="members-section">
+          <div class="section-header">
+            <span class="section-title">
+              <lightning-icon
+                icon-name="utility:groups"
+                size="x-small"
+                variant="inverse"
+              ></lightning-icon>
+              Room Members
+            </span>
+            <template lwc:if={canManageRoom}>
+              <lightning-button-icon
+                icon-name="utility:add"
+                variant="border-filled"
+                onclick={handleAddMembers}
+                alternative-text="Add Member"
+                title="Add Member"
+                aria-label="Add Member"
+                disabled={isAddMembersDisabled}
+              >
+              </lightning-button-icon>
+            </template>
+          </div>
+          <div class="members-list">
+            <template lwc:if={hasMembers}>
+              <template for:each={processedMembers} for:item="member">
+                <div key={member.Id} class="member-item">
+                  <div class="member-avatar-container">
+                    <template lwc:if={member.User__r}>
+                      <lightning-avatar
+                        src={member.User__r.SmallPhotoUrl}
+                        fallback-icon-name="standard:user"
+                        size="small"
+                      >
+                      </lightning-avatar>
+                    </template>
+                    <template lwc:else>
+                      <lightning-avatar
+                        fallback-icon-name="standard:user"
+                        size="small"
+                      >
+                      </lightning-avatar>
+                    </template>
+                    <!-- Blue tick indicator for users in session -->
+                    <template lwc:if={member.isInSession}>
+                      <span class="in-session-tick" title="In Session">
+                        <lightning-icon
+                          icon-name="utility:check"
+                          size="xx-small"
+                          variant="inverse"
+                        ></lightning-icon>
+                      </span>
+                    </template>
+                  </div>
+                  <div class="member-info">
+                    <div class="member-name-row">
+                      <p class="member-name">{member.userNameDisplay}</p>
+                    </div>
+                    <p class="member-role">{member.roleDisplay}</p>
+                    <!-- Time info -->
+                    <template lwc:if={member.lastActivityDisplay}>
+                      <p class="member-time">
+                        <lightning-icon
+                          icon-name="utility:clock"
+                          size="xx-small"
+                          class="time-icon"
+                        ></lightning-icon>
+                        {member.lastActivityDisplay}
+                      </p>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </template>
+            <template lwc:else>
+              <div class="empty-state">
+                <lightning-icon
+                  icon-name="utility:user"
+                  size="large"
+                  class="empty-state-icon"
+                ></lightning-icon>
+                <p>No members yet</p>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- Add Members Modal -->
+  <template lwc:if={showAddMembersModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <lightning-button-icon
+            icon-name="utility:close"
+            alternative-text="Close"
+            title="Close"
+            variant="bare"
+            onclick={handleCloseAddMembersModal}
+            class="slds-modal__close"
+          >
+          </lightning-button-icon>
+          <h2 class="slds-modal__title slds-hyphenate">Invite Members</h2>
+        </header>
+        <div class="slds-modal__content slds-var-p-around_medium">
+          <!-- Search Input -->
+          <lightning-input
+            type="search"
+            label="Search Users"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onchange={handleSearchChange}
+          >
+          </lightning-input>
+
+          <!-- Search Results -->
+          <template lwc:if={isSearching}>
+            <div class="slds-align_absolute-center slds-var-m-top_medium">
+              <lightning-spinner
+                alternative-text="Searching"
+                size="small"
+              ></lightning-spinner>
+            </div>
+          </template>
+
+          <template lwc:if={hasSearchResults}>
+            <div class="slds-var-m-top_medium">
+              <p class="slds-text-body_small slds-var-m-bottom_x-small">
+                Search Results
+              </p>
+              <ul class="slds-has-dividers_bottom-space">
+                <template for:each={searchResults} for:item="user">
+                  <li
+                    key={user.Id}
+                    class="slds-item slds-var-p-vertical_x-small"
+                  >
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                      <lightning-avatar
+                        src={user.SmallPhotoUrl}
+                        fallback-icon-name="standard:user"
+                        size="small"
+                        class="slds-var-m-right_small"
+                      >
+                      </lightning-avatar>
+                      <div class="slds-col slds-grow">
+                        <p class="slds-text-body_regular">{user.Name}</p>
+                        <p class="slds-text-body_small slds-text-color_weak">
+                          {user.Email}
+                        </p>
+                      </div>
+                      <lightning-button
+                        label="Add"
+                        variant="brand"
+                        data-user-id={user.Id}
+                        onclick={handleAddUser}
+                        disabled={user.isAlreadyMember}
+                      >
+                      </lightning-button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </template>
+
+          <template lwc:if={noSearchResults}>
+            <div
+              class="slds-align_absolute-center slds-var-m-top_medium slds-text-color_weak"
+            >
+              No users found
+            </div>
+          </template>
+
+          <!-- Selected Members -->
+          <template lwc:if={hasSelectedMembers}>
+            <div class="slds-var-m-top_medium">
+              <p class="slds-text-body_small slds-var-m-bottom_x-small">
+                Selected Members ({selectedMembersCount})
+              </p>
+              <div class="slds-list_horizontal slds-wrap">
+                <template for:each={selectedMembers} for:item="member">
+                  <lightning-pill
+                    key={member.Id}
+                    label={member.Name}
+                    name={member.Id}
+                    onremove={handleRemoveSelectedMember}
+                  >
+                  </lightning-pill>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+        <footer class="slds-modal__footer">
+          <lightning-button label="Cancel" onclick={handleCloseAddMembersModal}>
+          </lightning-button>
+          <lightning-button
+            label="Add Selected Members"
+            variant="brand"
+            onclick={handleSaveMembers}
+            disabled={noSelectedMembers}
+            class="slds-var-m-left_small"
+          >
+          </lightning-button>
+        </footer>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
 </template>
