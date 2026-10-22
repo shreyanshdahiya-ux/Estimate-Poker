@@ -363,9 +363,11 @@
                       <th scope="col">
                         <div class="slds-truncate">Role</div>
                       </th>
-                      <th scope="col">
-                        <div class="slds-truncate">Actions</div>
-                      </th>
+                      <template lwc:if={canEditMembers}>
+                        <th scope="col">
+                          <div class="slds-truncate">Actions</div>
+                        </th>
+                      </template>
                     </tr>
                   </thead>
                   <tbody>
@@ -399,8 +401,8 @@
                           </template>
                           <template lwc:else>{member.role}</template>
                         </td>
-                        <td>
-                          <template lwc:if={canEditMembers}>
+                        <template lwc:if={canEditMembers}>
+                          <td>
                             <lightning-button-icon
                               icon-name="utility:delete"
                               variant="bare"
@@ -409,8 +411,8 @@
                               onclick={handleRemoveMember}
                             >
                             </lightning-button-icon>
-                          </template>
-                        </td>
+                          </td>
+                        </template>
                       </tr>
                     </template>
                   </tbody>

@@ -65,7 +65,7 @@ export default class TeamManagement extends LightningElement {
     try {
       await refreshApex(this.wiredTeamsResult);
       this.showToast("Success", "Teams refreshed", "success");
-    } catch {
+    } catch (error) {
       this.showToast("Error", "Failed to refresh teams", "error");
     } finally {
       this.isLoading = false;
@@ -180,7 +180,7 @@ export default class TeamManagement extends LightningElement {
           ...user,
           isAlreadyMember: false
         }));
-    } catch {
+    } catch (error) {
       this.showToast("Error", "Failed to search users", "error");
     } finally {
       this.isSearchingMembers = false;

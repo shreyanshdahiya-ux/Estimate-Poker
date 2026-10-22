@@ -81,7 +81,6 @@
         <members>roomCreation</members>
         <members>roomDashboard</members>
         <members>roomList</members>
-        <members>soundPlayer</members>
         <members>storyManager</members>
         <members>teamManagement</members>
         <members>voteResults</members>

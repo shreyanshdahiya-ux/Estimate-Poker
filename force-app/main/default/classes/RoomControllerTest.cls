@@ -84,6 +84,9 @@ public with sharing class RoomControllerTest {
       LIMIT 1
     ];
 
+    // Members can only be removed before the session starts, so the room must be a Draft
+    update new Estimation_Poker_Room__c(Id = room.Id, Status__c = 'Draft');
+
     Test.startTest();
     List<Room_Member__c> members = RoomController.addRoomMembers(
       room.Id,
@@ -95,10 +98,20 @@ public with sharing class RoomControllerTest {
         }
       }
     );
-    RoomController.removeRoomMember(members[0].Id);
+    Id addedMemberId = members[0].Id;
+    System.assertEquals(
+      1,
+      [SELECT COUNT() FROM Room_Member__c WHERE Id = :addedMemberId],
+      'The member should be added'
+    );
+    RoomController.removeRoomMember(addedMemberId);
     Test.stopTest();
 
-    System.assert(true, 'Operation completed successfully');
+    System.assertEquals(
+      0,
+      [SELECT COUNT() FROM Room_Member__c WHERE Id = :addedMemberId],
+      'The member should be removed again'
+    );
   }
 
   /* ---------------- SET CURRENT STORY ---------------- */
@@ -345,5 +358,170 @@ public with sharing class RoomControllerTest {
       rejected = true;
     }
     System.assert(rejected, 'Liking yourself should be rejected');
+  }
+
+  /* ---------------- REMOVE ROOM MEMBERS ---------------- */
+
+  private static Map<String, Object> createRoomWithMember(
+    String roomStatus,
+    User otherUser
+  ) {
+    Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
+      Name = 'Remove Room ' + System.now().getTime(),
+      Status__c = roomStatus,
+      Estimation_Scale__c = 'Fibonacci',
+      Facilitator__c = UserInfo.getUserId()
+    );
+    insert room;
+    Room_Member__c facilitatorMember = new Room_Member__c(
+      Room__c = room.Id,
+      User__c = UserInfo.getUserId(),
+      Role_In_Room__c = 'Facilitator',
+      Status__c = 'Active',
+      Joined_Date__c = System.now(),
+      Can_Vote__c = true
+    );
+    Room_Member__c otherMember = new Room_Member__c(
+      Room__c = room.Id,
+      User__c = otherUser.Id,
+      Role_In_Room__c = 'Voter',
+      Status__c = 'Invited',
+      Joined_Date__c = System.now(),
+      Can_Vote__c = true
+    );
+    insert new List<Room_Member__c>{ facilitatorMember, otherMember };
+    return new Map<String, Object>{
+      'room' => room,
+      'facilitatorMember' => facilitatorMember,
+      'otherMember' => otherMember
+    };
+  }
+
+  @isTest
+  static void testRemoveRoomMember_RemovesMemberBeforeSessionStarts() {
+    User other = TestAccess.createUserWithPermissionSet(
+      'Estimation_Poker_Team_Member',
+      'rmv' + String.valueOf(System.now().getTime())
+    );
+    Map<String, Object> setup = createRoomWithMember('Draft', other);
+    Room_Member__c otherMember = (Room_Member__c) setup.get('otherMember');
+
+    Test.startTest();
+    RoomController.removeRoomMember(otherMember.Id);
+    Test.stopTest();
+
+    System.assertEquals(
+      0,
+      [SELECT COUNT() FROM Room_Member__c WHERE Id = :otherMember.Id],
+      'The member should be removed from a room that has not started'
+    );
+  }
+
+  @isTest
+  static void testRemoveRoomMember_RefusedOnceTheSessionHasStarted() {
+    User other = TestAccess.createUserWithPermissionSet(
+      'Estimation_Poker_Team_Member',
+      'rmw' + String.valueOf(System.now().getTime())
+    );
+    Map<String, Object> setup = createRoomWithMember('Active', other);
+    Room_Member__c otherMember = (Room_Member__c) setup.get('otherMember');
+
+    Boolean refused = false;
+    try {
+      RoomController.removeRoomMember(otherMember.Id);
+    } catch (AuraHandledException e) {
+      refused = true;
+    }
+
+    System.assert(
+      refused,
+      'Removing a member from a started room should be refused'
+    );
+    System.assertEquals(
+      1,
+      [SELECT COUNT() FROM Room_Member__c WHERE Id = :otherMember.Id],
+      'The member should still be in the room'
+    );
+  }
+
+  @isTest
+  static void testRemoveRoomMember_RoomFacilitatorCannotBeRemoved() {
+    User other = TestAccess.createUserWithPermissionSet(
+      'Estimation_Poker_Team_Member',
+      'rmx' + String.valueOf(System.now().getTime())
+    );
+    Map<String, Object> setup = createRoomWithMember('Draft', other);
+    Room_Member__c facilitatorMember = (Room_Member__c) setup.get(
+      'facilitatorMember'
+    );
+
+    Boolean refused = false;
+    try {
+      RoomController.removeRoomMember(facilitatorMember.Id);
+    } catch (AuraHandledException e) {
+      refused = true;
+    }
+
+    System.assert(refused, 'The room facilitator must not be removable');
+    System.assertEquals(
+      1,
+      [SELECT COUNT() FROM Room_Member__c WHERE Id = :facilitatorMember.Id],
+      'The facilitator should still be in the room'
+    );
+  }
+
+  /* ---------------- START REQUIRES A STORY ---------------- */
+
+  @isTest
+  static void testUpdateRoomStatus_CannotStartARoomWithoutStories() {
+    Estimation_Poker_Room__c room = new Estimation_Poker_Room__c(
+      Name = 'Empty Room ' + System.now().getTime(),
+      Status__c = 'Draft',
+      Estimation_Scale__c = 'Fibonacci',
+      Facilitator__c = UserInfo.getUserId()
+    );
+    insert room;
+    insert new Room_Member__c(
+      Room__c = room.Id,
+      User__c = UserInfo.getUserId(),
+      Role_In_Room__c = 'Facilitator',
+      Status__c = 'Active',
+      Joined_Date__c = System.now(),
+      Can_Vote__c = true
+    );
+
+    String message;
+    try {
+      RoomController.updateRoomStatus(room.Id, 'Active');
+    } catch (AuraHandledException e) {
+      message = e.getMessage();
+    }
+
+    System.assertNotEquals(
+      null,
+      message,
+      'Starting a room with no stories should be refused'
+    );
+    System.assertEquals(
+      'Draft',
+      [SELECT Status__c FROM Estimation_Poker_Room__c WHERE Id = :room.Id]
+      .Status__c,
+      'The room should still be a Draft'
+    );
+
+    // Once a story exists the room can start
+    insert new User_Story__c(
+      Room__c = room.Id,
+      Story_Title__c = 'First story',
+      Status__c = 'Pending',
+      Story_Order__c = 1
+    );
+    RoomController.updateRoomStatus(room.Id, 'Active');
+    System.assertEquals(
+      'Active',
+      [SELECT Status__c FROM Estimation_Poker_Room__c WHERE Id = :room.Id]
+      .Status__c,
+      'A room with a story can start'
+    );
   }
 }

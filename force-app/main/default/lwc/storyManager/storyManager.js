@@ -346,7 +346,7 @@ export default class StoryManager extends LightningElement {
       // this.showToast('Success', 'Story order updated', 'success');
       // Notify parent that order has changed
       this.dispatchEvent(new CustomEvent("storyreordered"));
-    } catch {
+    } catch (error) {
       // this.showToast('Error', 'Failed to save story order', 'error');
       // Refresh to restore original order from server
       this.dispatchEvent(new CustomEvent("storyreordered"));

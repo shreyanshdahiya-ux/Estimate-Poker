@@ -3,6 +3,11 @@
 #
 
 **/staticresources/**
+
+# LWC templates: Prettier splits closing tags across two lines (</span newline >),
+# which the Code Analyzer HTML parser cannot read
+**/lwc/**/*.html
+
 .localdevserver
 .sfdx
 .sf

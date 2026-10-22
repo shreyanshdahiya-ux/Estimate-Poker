@@ -2,9 +2,19 @@
 
 A real-time **Planning Poker** application built natively on the Salesforce platform (Apex, Lightning Web Components, Platform Events). Teams create estimation rooms, vote privately on user stories, reveal votes simultaneously, review statistics, and record a final estimate, all inside Salesforce with no external services.
 
+## Install
+
+[![Install in Salesforce](https://img.shields.io/badge/Install%20in-Salesforce-00A1E0?style=for-the-badge&logo=salesforce&logoColor=white)](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tf6000000UHWT)
+[![Install in a Sandbox](https://img.shields.io/badge/Install%20in-Sandbox-5C6BC0?style=for-the-badge&logo=salesforce&logoColor=white)](https://test.salesforce.com/packaging/installPackage.apexp?p0=04tf6000000UHWT)
+
+Version 1.0 of the managed package (namespace `estpoker`). Use the first button for production and Developer Edition orgs, and the second for sandboxes. After installing, assign the permission sets and open the **Estimate Poker** app from the App Launcher. The [Onboarding Guide](docs/Onboarding-Guide.docx) walks through setup, roles and your first session.
+
+## Project
+
 - **Source API version:** 65.0
-- **Project type:** Salesforce DX, unmanaged source (single package directory `force-app`, no namespace)
-- **Further reading:** [Application Overview](docs/Application-Overview.md) (non-technical guide), [Marketing Overview](docs/Marketing-Overview.md)
+- **Project type:** Salesforce DX source for a first generation managed package (single package directory `force-app`, namespace `estpoker`)
+- **Getting started:** [Onboarding Guide](docs/Onboarding-Guide.docx) (setup, roles, and how to run a session)
+- **Further reading:** [Application Overview](docs/Application-Overview.docx) (non-technical guide)
 
 ## Features
 
@@ -25,7 +35,7 @@ A real-time **Planning Poker** application built natively on the Salesforce plat
  Lightning Web Components (UI)
    planningPokerApp ─ roomList ─ roomCreation ─ roomDashboard ─ estimationSession
    currentStory ─ storyManager ─ votingPanel ─ pokerCards ─ voteResults
-   teamManagement ─ helpPanel ─ soundPlayer ─ realtimeEventHandler
+   teamManagement ─ helpPanel ─ realtimeEventHandler
             │  @AuraEnabled                          ▲  lightning/empApi (subscribe)
             ▼                                        │
  Apex controllers (with sharing)                     │
@@ -107,16 +117,16 @@ To check usage, run `sf limits api display` and look at `DailyDeliveredPlatformE
 
 ### Lightning Web Components
 
-| Component                                   | Role                                                             |
-| ------------------------------------------- | ---------------------------------------------------------------- |
-| `planningPokerApp`                          | Top-level container (App Page, Home Page, Tab)                   |
-| `roomList`, `roomCreation`, `roomDashboard` | Browse, create and manage rooms                                  |
-| `estimationSession`                         | The live session shell                                           |
-| `currentStory`, `storyManager`              | Show the active story; manage the story backlog                  |
-| `votingPanel`, `pokerCards`, `voteResults`  | Card selection, vote submission, revealed results and statistics |
-| `teamManagement`                            | Teams and members                                                |
-| `helpPanel`                                 | Contextual help, tours, feedback                                 |
-| `realtimeEventHandler`, `soundPlayer`       | Event subscription; audio cues                                   |
+| Component                                   | Role                                                                                     |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `planningPokerApp`                          | Top-level container (App Page, Home Page, Tab)                                           |
+| `roomList`, `roomCreation`, `roomDashboard` | Browse, create and manage rooms (the dashboard plays start, pause, resume and end tones) |
+| `estimationSession`                         | The live session shell                                                                   |
+| `currentStory`, `storyManager`              | Show the active story; manage the story backlog                                          |
+| `votingPanel`, `pokerCards`, `voteResults`  | Card selection, vote submission, revealed results and statistics                         |
+| `teamManagement`                            | Teams and members                                                                        |
+| `helpPanel`                                 | Contextual help, tours, feedback                                                         |
+| `realtimeEventHandler`                      | Event subscription                                                                       |
 
 ### Security model
 
@@ -146,7 +156,7 @@ force-app/main/default/
   customPermissions/  Facilitate Estimation Rooms
   layouts/            Page layouts
 config/               Scratch org definition
-docs/                 Application and marketing overviews
+docs/                 Onboarding guide and application overview (Word)
 package.xml           Manifest for metadata API deployment
 ```
 

@@ -2,6 +2,8 @@ import { LightningElement, api, track } from "lwc";
 import getRoomDetails from "@salesforce/apex/RoomController.getRoomDetails";
 import updateRoomStatus from "@salesforce/apex/RoomController.updateRoomStatus";
 import addRoomMembers from "@salesforce/apex/RoomController.addRoomMembers";
+import removeRoomMember from "@salesforce/apex/RoomController.removeRoomMember";
+import LightningConfirm from "lightning/confirm";
 import searchUsers from "@salesforce/apex/TeamController.searchUsers";
 import getVoteHistory from "@salesforce/apex/VotingController.getVoteHistory";
 import { stripNamespace } from "c/nsUtil";
@@ -376,7 +378,11 @@ export default class RoomDashboard extends LightningElement {
           // Format joined time for display
           joinedTimeDisplay: this.formatMemberTime(member.Joined_Date__c),
           lastActivityDisplay: this.formatMemberTime(member.Last_Activity__c),
-          userNameDisplay: member.User__r?.Name || "Unknown User"
+          userNameDisplay: member.User__r?.Name || "Unknown User",
+          // The room's own facilitator can never be removed
+          canRemove:
+            this.canRemoveMembers &&
+            member.User__c !== this.roomDetails?.room?.Facilitator__c
         };
       });
       console.log(
@@ -601,6 +607,20 @@ export default class RoomDashboard extends LightningElement {
     return this.processedMembers && this.processedMembers.length > 0;
   }
 
+  get hasStories() {
+    return Array.isArray(this.stories) && this.stories.length > 0;
+  }
+
+  get isStartDisabled() {
+    return !this.hasStories;
+  }
+
+  get startSessionTitle() {
+    return this.hasStories
+      ? "Start the estimation session"
+      : "Add at least one story to start the session";
+  }
+
   get canStartSession() {
     return (
       this.roomDetails?.room?.Status__c === "Draft" &&
@@ -699,6 +719,39 @@ export default class RoomDashboard extends LightningElement {
 
   get isAddMembersDisabled() {
     return this.isSessionCompleted;
+  }
+
+  // Members can be removed by someone who can manage the room, until the session has started
+  get canRemoveMembers() {
+    return (
+      this.roomDetails?.isFacilitator === true &&
+      this.roomDetails?.room?.Status__c === "Draft"
+    );
+  }
+
+  async handleRemoveMember(event) {
+    const memberId = event.currentTarget.dataset.memberId;
+    const memberName = event.currentTarget.dataset.memberName;
+    if (!memberId) return;
+
+    const confirmed = await LightningConfirm.open({
+      message: `Remove ${memberName} from this room?`,
+      label: "Remove member",
+      theme: "warning"
+    });
+    if (!confirmed) return;
+
+    try {
+      await removeRoomMember({ roomMemberId: memberId });
+      this.showToast("Member removed", `${memberName} was removed`, "success");
+      await this.handleRefresh();
+    } catch (error) {
+      this.showToast(
+        "Error",
+        error.body?.message || "Failed to remove member",
+        "error"
+      );
+    }
   }
 
   handleAddMembers() {

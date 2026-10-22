@@ -40,6 +40,42 @@ describe("c-ns-util stripNamespace", () => {
   });
 });
 
+describe("c-ns-util with a namespace", () => {
+  it("builds namespaced event channels from the prefix Apex returns", async () => {
+    let nsUtil;
+    let apexMock;
+    // Isolated registry: the prefix is cached per module instance
+    jest.isolateModules(() => {
+      nsUtil = require("c/nsUtil");
+      apexMock =
+        require("@salesforce/apex/NamespaceController.getNamespacePrefix").default;
+    });
+    apexMock.mockResolvedValue("estpoker__");
+
+    expect(await nsUtil.getEventChannel("Poker_Vote_Event__e")).toBe(
+      "/event/estpoker__Poker_Vote_Event__e"
+    );
+    expect(await nsUtil.getEventChannel("Poker_Room_Event__e")).toBe(
+      "/event/estpoker__Poker_Room_Event__e"
+    );
+  });
+
+  it("strips a real namespace from Apex results and event payloads", () => {
+    const payload = {
+      estpoker__Story_Id__c: "a0I1",
+      estpoker__Final_Estimate__c: "8",
+      estpoker__Current_Story__r: { Name: "S-1" },
+      Id: "a0J1"
+    };
+    expect(stripNamespace(payload)).toEqual({
+      Story_Id__c: "a0I1",
+      Final_Estimate__c: "8",
+      Current_Story__r: { Name: "S-1" },
+      Id: "a0J1"
+    });
+  });
+});
+
 describe("c-ns-util channels", () => {
   it("builds an un-namespaced channel when the prefix is empty", async () => {
     getNamespacePrefix.mockResolvedValue("");

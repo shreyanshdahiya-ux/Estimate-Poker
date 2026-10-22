@@ -74,10 +74,15 @@
           >
             <!-- Start Session - Only for Draft rooms (Facilitator only) -->
             <template lwc:if={canStartSession}>
+              <template lwc:if={isStartDisabled}>
+                <span class="start-hint">Add a story to start</span>
+              </template>
               <lightning-button
                 label="Start Session"
                 variant="success"
                 icon-name="utility:play"
+                title={startSessionTitle}
+                disabled={isStartDisabled}
                 onclick={handleStartSession}
               >
               </lightning-button>
@@ -105,8 +110,7 @@
             <!-- Completed badge -->
             <template lwc:if={isSessionCompleted}>
               <span class="slds-badge slds-theme_success slds-var-m-left_small"
-                >Session Completed</span
-              >
+                >Session Completed</span>
             </template>
           </div>
         </div>
@@ -195,8 +199,7 @@
                     <div class="pie-ring-inner">
                       <div class="pie-content-elite">
                         <span class="pie-main-val"
-                          >{pieChartData.estimatedPercent}%</span
-                        >
+                          >{pieChartData.estimatedPercent}%</span>
                         <span class="pie-sub-txt">Completed</span>
                       </div>
                     </div>
@@ -265,8 +268,7 @@
                             <!-- Advanced Floating Tooltip -->
                             <div class="bar-ux-tooltip">
                               <span class="ux-tip-main"
-                                >{item.tooltipMain}</span
-                              >
+                                >{item.tooltipMain}</span>
                               <span class="ux-tip-sub">{item.tooltipSub}</span>
                             </div>
                           </div>
@@ -421,16 +423,13 @@
                       <div class="history-story-meta">
                         <template lwc:if={historyItem.finalEstimate}>
                           <span class="history-estimate-badge-mini"
-                            >{historyItem.finalEstimate}</span
-                          >
+                            >{historyItem.finalEstimate}</span>
                         </template>
                         <span class="history-vote-count-mini"
-                          >{historyItem.voteCount} votes</span
-                        >
+                          >{historyItem.voteCount} votes</span>
                         <template lwc:if={historyItem.formattedDate}>
                           <span class="history-date-mini"
-                            >{historyItem.formattedDate}</span
-                          >
+                            >{historyItem.formattedDate}</span>
                         </template>
                       </div>
                     </div>
@@ -450,26 +449,21 @@
                                 />
                               </template>
                               <span class="vote-voter-name-mini"
-                                >{vote.voterName}</span
-                              >
+                                >{vote.voterName}</span>
                             </div>
                             <div class="vote-data-ribbon">
                               <span class="vote-val-mini"
-                                >{vote.voteValue}</span
-                              >
+                                >{vote.voteValue}</span>
                               <template lwc:if={vote.confidenceLabel}>
                                 <span class={vote.confidenceClass}
-                                  >{vote.confidenceLabel}</span
-                                >
+                                  >{vote.confidenceLabel}</span>
                               </template>
                               <template lwc:if={vote.formattedDuration}>
                                 <span class="vote-meta-txt"
-                                  >⏱️ {vote.formattedDuration}</span
-                                >
+                                  >⏱️ {vote.formattedDuration}</span>
                               </template>
                               <span class="vote-meta-txt"
-                                >{vote.formattedTime}</span
-                              >
+                                >{vote.formattedTime}</span>
                             </div>
                             <template lwc:if={vote.hasComment}>
                               <div
@@ -602,6 +596,19 @@
                       </p>
                     </template>
                   </div>
+                  <template lwc:if={member.canRemove}>
+                    <lightning-button-icon
+                      class="member-remove"
+                      icon-name="utility:close"
+                      variant="bare"
+                      alternative-text="Remove member"
+                      title="Remove member"
+                      data-member-id={member.Id}
+                      data-member-name={member.userNameDisplay}
+                      onclick={handleRemoveMember}
+                    >
+                    </lightning-button-icon>
+                  </template>
                 </div>
               </template>
             </template>

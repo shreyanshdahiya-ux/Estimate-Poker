@@ -333,7 +333,7 @@ export default class EstimationSession extends LightningElement {
     try {
       await updateRoomStatus({ roomId: this.roomId, status: "Paused" });
       // Redirection is now handled by handleRoomEventFromHandler to keep users synced
-    } catch {
+    } catch (error) {
       this.showToast("Error", "Failed to pause session", "error");
     }
   }
@@ -342,7 +342,7 @@ export default class EstimationSession extends LightningElement {
     try {
       await updateRoomStatus({ roomId: this.roomId, status: "Completed" });
       // Redirection is now handled by the consolidated handleRoomEvent method
-    } catch {
+    } catch (error) {
       this.showToast("Error", "Failed to end session", "error");
     }
   }
@@ -637,7 +637,7 @@ export default class EstimationSession extends LightningElement {
 
     try {
       await reorderStories({ roomId: this.roomId, storyOrders });
-    } catch {
+    } catch (error) {
       this.showToast("Error", "Failed to save story order", "error");
       // Reload to get correct order
       this.loadSessionData();

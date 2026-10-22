@@ -482,6 +482,13 @@ export default class VotingPanel extends LightningElement {
     const distribution = this.voteStatistics.distribution;
     const values = Object.keys(distribution);
 
+    // A single vote cannot be a consensus: it needs at least two votes
+    const totalVotes = Object.values(distribution).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+    if (totalVotes < 2) return false;
+
     // Filter out special cards
     const numericVotes = values.filter(
       (v) =>
@@ -791,8 +798,14 @@ export default class VotingPanel extends LightningElement {
     return Math.round((this.voteCount / this.totalMembers) * 100);
   }
 
+  // The clock only runs from a reveal seen live. After a reload there is no start time to count from,
+  // so the bar stays hidden instead of sitting at 00:00.
   get showDiscussionTimer() {
-    return this.votesRevealed && !this.isFinalized;
+    return (
+      this.votesRevealed &&
+      !this.isFinalized &&
+      this.discussionStartTime !== null
+    );
   }
 
   get canSubmitVote() {

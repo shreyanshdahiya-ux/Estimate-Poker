@@ -12,7 +12,8 @@ export default class VoteResults extends LightningElement {
   }
 
   get hasConsensus() {
-    return this.statistics?.hasConsensus || false;
+    // Needs at least two votes; one vote cannot be a consensus
+    return (this.statistics?.hasConsensus || false) && this.votersCount >= 2;
   }
 
   get hasOutliers() {
@@ -203,6 +204,14 @@ export default class VoteResults extends LightningElement {
         return new Date(b.votedAt) - new Date(a.votedAt);
       });
     return sorted.length > 0 ? sorted[0] : null;
+  }
+
+  // Only claim the whole team agrees when everyone who can vote did vote
+  get consensusMessage() {
+    if (this.hasNonVoters) {
+      return `All ${this.votersCount} votes cast agree (${this.nonVoters.length} did not vote)`;
+    }
+    return "All team members agree";
   }
 
   get votersCount() {

@@ -306,28 +306,25 @@ public with sharing class RoomController {
 
       // Query member counts
       for (AggregateResult ar : [
-        SELECT Room__c, COUNT(Id) cnt
+        SELECT Room__c roomId, COUNT(Id) cnt
         FROM Room_Member__c
         WHERE Room__c IN :roomIds
         WITH USER_MODE
         GROUP BY Room__c
       ]) {
-        memberCounts.put(
-          (Id) ar.get('Room__c'),
-          Integer.valueOf(ar.get('cnt'))
-        );
+        memberCounts.put((Id) ar.get('roomId'), Integer.valueOf(ar.get('cnt')));
       }
 
       // Query story counts (total and estimated)
       for (AggregateResult ar : [
-        SELECT Room__c, Status__c, COUNT(Id) cnt
+        SELECT Room__c roomId, Status__c storyStatus, COUNT(Id) cnt
         FROM User_Story__c
         WHERE Room__c IN :roomIds
         WITH USER_MODE
         GROUP BY Room__c, Status__c
       ]) {
-        Id rId = (Id) ar.get('Room__c');
-        String status = (String) ar.get('Status__c');
+        Id rId = (Id) ar.get('roomId');
+        String status = (String) ar.get('storyStatus');
         Integer cnt = Integer.valueOf(ar.get('cnt'));
 
         Integer currentTotal = storyCounts.containsKey(rId)
@@ -398,6 +395,21 @@ public with sharing class RoomController {
         WITH USER_MODE
         LIMIT 1
       ];
+
+      // A session needs something to estimate: starting (or resuming) requires at least one story
+      if (status == 'Active' && room.Status__c != 'Active') {
+        Integer storyCount = [
+          SELECT COUNT()
+          FROM User_Story__c
+          WHERE Room__c = :roomId
+          WITH USER_MODE
+        ];
+        if (storyCount == 0) {
+          throw new AuraHandledException(
+            'Add at least one story before starting the session.'
+          );
+        }
+      }
 
       room.Status__c = status;
       String additionalData = null;
@@ -581,6 +593,24 @@ public with sharing class RoomController {
         roomId,
         'Only facilitators can remove members from the room.'
       );
+
+      Estimation_Poker_Room__c room = [
+        SELECT Status__c, Facilitator__c
+        FROM Estimation_Poker_Room__c
+        WHERE Id = :roomId
+        WITH USER_MODE
+        LIMIT 1
+      ];
+      if (room.Status__c != 'Draft') {
+        throw new AuraHandledException(
+          'Members can only be removed before the session has started.'
+        );
+      }
+      if (odataUserId == room.Facilitator__c) {
+        throw new AuraHandledException(
+          'The room facilitator cannot be removed.'
+        );
+      }
 
       delete as user member;
 

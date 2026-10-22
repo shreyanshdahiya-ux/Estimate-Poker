@@ -444,18 +444,15 @@ public with sharing class GuidanceControllerTest {
     Integer orderNum,
     Boolean isActive
   ) {
-    Map<String, Object> fields = new Map<String, Object>{
-      'DeveloperName' => developerName,
-      'MasterLabel' => masterLabel,
-      'Content__c' => content,
-      'Category__c' => category,
-      'Context__c' => context,
-      'Order__c' => orderNum,
-      'Active__c' => isActive
-    };
-    return (Help_Content__mdt) JSON.deserialize(
-      JSON.serialize(fields),
-      Help_Content__mdt.class
+    // Built with a constructor, not JSON, so the field names resolve in a namespaced org too
+    return new Help_Content__mdt(
+      DeveloperName = developerName,
+      MasterLabel = masterLabel,
+      Content__c = content,
+      Category__c = category,
+      Context__c = context,
+      Order__c = orderNum,
+      Active__c = isActive
     );
   }
 

@@ -81,14 +81,14 @@ public with sharing class TeamController {
       // Get member counts
       Map<Id, Integer> memberCounts = new Map<Id, Integer>();
       for (AggregateResult ar : [
-        SELECT Team__c, COUNT(Id) cnt
+        SELECT Team__c teamId, COUNT(Id) cnt
         FROM Team_Member__c
         WHERE Team__c IN :teamIds AND Active__c = TRUE
         WITH USER_MODE
         GROUP BY Team__c
       ]) {
         memberCounts.put(
-          (Id) ar.get('Team__c'),
+          (Id) ar.get('teamId'),
           ((Decimal) ar.get('cnt')).intValue()
         );
       }
@@ -158,14 +158,14 @@ public with sharing class TeamController {
       // Get member counts
       Map<Id, Integer> memberCounts = new Map<Id, Integer>();
       for (AggregateResult ar : [
-        SELECT Team__c, COUNT(Id) cnt
+        SELECT Team__c teamId, COUNT(Id) cnt
         FROM Team_Member__c
         WHERE Team__c IN :teamIds AND Active__c = TRUE
         WITH USER_MODE
         GROUP BY Team__c
       ]) {
         memberCounts.put(
-          (Id) ar.get('Team__c'),
+          (Id) ar.get('teamId'),
           ((Decimal) ar.get('cnt')).intValue()
         );
       }
